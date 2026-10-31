@@ -1,0 +1,40 @@
+/* ─────────────────────────────────────────────────────────────
+   tokens.css — single source of truth for all design tokens.
+   Change values here only. §2 of DESIGN.md.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* Palette */
+  --paper:       #EFECE4;   /* warm off-white page */
+  --ink:         #16150F;   /* text — 16.4:1 on --paper */
+  --muted:       #5F5B50;   /* secondary — 4.6:1 on --paper ✓ AA */
+  --rule:        #CBC6B8;   /* hairlines */
+  --accent:      #0F6B3E;   /* Sudanese flag green; links, CTA, focus, status */
+  --accent-ink:  #FFFFFF;
+
+  /* Typography */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-ar:   "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif;
+
+  /* Type scale — clamp(min, fluid, max) */
+  --text-display: clamp(3.5rem, 7vw, 6rem);    /* 56–96px */
+  --text-h2:      clamp(1.75rem, 3.5vw, 2.25rem); /* 28–36px */
+  --text-body:    clamp(1.0625rem, 1.5vw, 1.125rem); /* 17–18px */
+  --text-mono:    clamp(0.8125rem, 1.1vw, 0.875rem); /* 13–14px */
+
+  /* Spacing — 8pt scale */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --space-12: 96px;
+  --space-16: 128px;
+
+  /* Layout */
+  --measure:   65ch;
+  --container: min(1280px, 100% - var(--space-8));
+  --radius:    2px;
+}

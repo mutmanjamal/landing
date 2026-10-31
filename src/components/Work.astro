@@ -1,0 +1,181 @@
+---
+// Work.astro
+// Fix 5: rule is now a sibling outside the article, so padding-block on the row works correctly.
+// Fix 6: stack tags rendered as <li> flex items — no joined string, no dangling separator.
+// Fix 7: heading dead space removed — section padding tightened, heading sits flush above first rule.
+
+import { getCollection } from 'astro:content';
+const allProjects = await getCollection('projects');
+const projects = allProjects.sort((a, b) => a.data.order - b.data.order);
+---
+
+<section id="work" aria-labelledby="work-heading">
+  <div class="container work-header">
+    <h2 class="section-heading" id="work-heading">Work</h2>
+  </div>
+
+  {projects.map((project) => (
+    <>
+      <div class="rule-full" role="separator"></div>
+      <article class:list={['project-row', project.data.featured && 'project-row--featured']}>
+        <div class="container project-row-inner">
+
+          <div class="project-meta">
+            <span class="label project-status">{project.data.status}</span>
+            <ul class="project-stack-list" role="list">
+              {project.data.stack.map((tag) => (
+                <li class="label">{tag}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div class="project-body">
+            <h3 class="project-title">
+              <a href={`/projects/${project.slug}`}>{project.data.title}</a>
+            </h3>
+            <p class="project-summary">{project.data.summary}</p>
+            <a href={`/projects/${project.slug}`} class="project-link label">
+              Read more →
+            </a>
+          </div>
+
+        </div>
+      </article>
+    </>
+  ))}
+  <div class="rule-full" role="separator"></div>
+</section>
+
+<style>
+  /* ── Section ─────────────────────────────────────────────────── */
+  #work {
+    padding-block-start: var(--space-8);
+  }
+
+  /* Heading sits tight above the first rule — no orphaned gap */
+  .work-header {
+    padding-block-end: var(--space-4);
+  }
+
+  .section-heading {
+    font-size: var(--text-h2);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+
+  /* Full-width hairline rule, lives outside article so it is not
+     consumed by article's padding and does not clip "Read more" */
+  .rule-full {
+    border: none;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  /* ── Project row ─────────────────────────────────────────────── */
+  .project-row {
+    padding-block: var(--space-6);
+  }
+
+  .project-row-inner {
+    display: grid;
+    grid-template-columns: 14ch 1fr;
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  /* Featured (Sudan POS): asymmetry via title scale only. No rule. §10 */
+  .project-row--featured .project-title {
+    font-size: var(--text-h2);
+    letter-spacing: -0.02em;
+  }
+
+  /* ── Meta column ─────────────────────────────────────────────── */
+  .project-meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-block-start: 0.2em; /* optical alignment with title cap-height */
+  }
+
+  .project-status {
+    color: var(--muted);
+    text-transform: lowercase;
+  }
+
+  /* Stack as flex-wrapped items — no joined string, no dangling · */
+  .project-stack-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .project-stack-list li {
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* ── Body column ─────────────────────────────────────────────── */
+  .project-title {
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    margin-block-end: var(--space-2);
+  }
+
+  .project-title a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .project-title a:hover {
+    color: var(--accent);
+    opacity: 1;
+  }
+
+  .project-summary {
+    color: var(--muted);
+    max-inline-size: var(--measure);
+    margin-block-end: var(--space-3);
+    line-height: 1.6;
+  }
+
+  .project-link {
+    color: var(--accent);
+    text-decoration: none;
+    display: inline-block; /* prevents touching the rule */
+  }
+  .project-link:hover {
+    opacity: 0.75;
+  }
+
+  /* ── Responsive ──────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .project-row-inner {
+      grid-template-columns: 1fr;
+      gap: var(--space-3);
+    }
+    .project-meta {
+      flex-direction: row;
+      flex-wrap: wrap;
+      column-gap: var(--space-3);
+      row-gap: var(--space-1);
+      padding-block-start: 0;
+    }
+    /* Stack list goes horizontal on mobile too */
+    .project-stack-list {
+      flex-direction: row;
+      flex-wrap: wrap;
+      column-gap: var(--space-2);
+      row-gap: 2px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    #work {
+      padding-block-start: var(--space-6);
+    }
+    .project-row {
+      padding-block: var(--space-4);
+    }
+  }
+</style>

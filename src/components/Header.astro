@@ -1,0 +1,75 @@
+---
+// Header.astro — §3 rule: name left, 3 text links right. No logo, no hamburger on desktop.
+// Mobile: nav stacks below name. No hamburger overlay (JS-free).
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="/" class="header-name" aria-label="Mutman Jamalaldin — home">
+      Mutman Jamalaldin
+    </a>
+    <nav aria-label="Main navigation">
+      <ul class="header-nav" role="list">
+        <li><a href="/#work">Work</a></li>
+        <li><a href="/#stack">Stack</a></li>
+        <li><a href="/#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    padding-block: var(--space-3);
+    border-block-end: 1px solid var(--rule);
+    position: sticky;
+    inset-block-start: 0;
+    background-color: var(--paper);
+    z-index: 10;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .header-name {
+    font-size: var(--text-body);
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .header-nav {
+    display: flex;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .header-nav a {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono);
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+  }
+
+  .header-nav a:hover {
+    color: var(--ink);
+    opacity: 1;
+  }
+
+  @media (max-width: 360px) {
+    .header-inner {
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .header-nav {
+      gap: var(--space-3);
+    }
+  }
+</style>

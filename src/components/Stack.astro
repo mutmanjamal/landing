@@ -1,0 +1,86 @@
+---
+// Stack.astro — §3: grouped list of tools, no skill bars, no percentages, no logo walls.
+---
+
+<section id="stack" aria-labelledby="stack-heading">
+  <div class="section-rule-full"></div>
+  <div class="container">
+    <h2 class="section-heading" id="stack-heading">Stack</h2>
+    <dl class="stack-list">
+      <div class="stack-group">
+        <dt class="label">Languages</dt>
+        <dd>JavaScript · Python · Bash · HTML · CSS · some SQL</dd>
+      </div>
+      <div class="stack-group">
+        <dt class="label">Environments</dt>
+        <dd>Node.js · Electron · Flask · Linux (Debian/Ubuntu)</dd>
+      </div>
+      <div class="stack-group">
+        <dt class="label">Infrastructure</dt>
+        <dd>Docker · Docker Compose · Tailscale · SSH · Nginx</dd>
+      </div>
+      <div class="stack-group">
+        <dt class="label">Data</dt>
+        <dd>SQLite · basic PostgreSQL</dd>
+      </div>
+      <div class="stack-group">
+        <dt class="label">Tools</dt>
+        <dd>Git · VS Code · Claude · Gemini · Ollama (local models)</dd>
+      </div>
+    </dl>
+
+  </div>
+</section>
+
+<style>
+  #stack {
+    padding-block: var(--space-12);
+  }
+
+  .section-rule-full {
+    border: none;
+    border-block-start: 1px solid var(--rule);
+    margin-block-end: var(--space-12);
+  }
+
+  .section-heading {
+    font-size: var(--text-h2);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-block-end: var(--space-6);
+  }
+
+  .stack-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-inline-size: var(--measure);
+  }
+
+  .stack-group {
+    display: grid;
+    grid-template-columns: 14ch 1fr;
+    gap: var(--space-4);
+    align-items: baseline;
+  }
+
+  .stack-group dt {
+    color: var(--muted);
+  }
+
+  .stack-group dd {
+    color: var(--ink);
+    font-size: var(--text-body);
+    line-height: 1.6;
+  }
+
+
+
+
+  @media (max-width: 480px) {
+    .stack-group {
+      grid-template-columns: 1fr;
+      gap: var(--space-1);
+    }
+  }
+</style>

@@ -1,0 +1,105 @@
+---
+// Contact.astro — §3: email as text, then links. No form (optional). Education in footer.
+---
+
+<section id="contact" aria-labelledby="contact-heading">
+  <div class="section-rule-full"></div>
+  <div class="container">
+    <h2 class="section-heading" id="contact-heading">Contact</h2>
+    <p class="contact-line">
+      Looking for remote work in web development, technical support, or general tech.
+      If something here caught your attention, write to me directly.
+    </p>
+    <address class="contact-address">
+      <a href="mailto:mutmanhejaze@gmail.com" class="contact-email">
+        mutmanhejaze@gmail.com
+      </a>
+      <ul class="contact-list label" role="list">
+        <li>
+          <span class="contact-label">Phone</span>
+          <a href="tel:+601161765456">+60 11-6176 5456</a>
+        </li>
+        <li>
+          <span class="contact-label">Location</span>
+          <span>Kuala Lumpur, Malaysia</span>
+        </li>
+        <!-- TODO(mutman): Add GitHub, LinkedIn or any other profile you want linked here -->
+      </ul>
+    </address>
+  </div>
+</section>
+
+<style>
+  #contact {
+    padding-block: var(--space-12);
+  }
+
+  .section-rule-full {
+    border: none;
+    border-block-start: 1px solid var(--rule);
+    margin-block-end: var(--space-12);
+  }
+
+  .section-heading {
+    font-size: var(--text-h2);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-block-end: var(--space-4);
+  }
+
+  .contact-line {
+    color: var(--muted);
+    max-inline-size: var(--measure);
+    margin-block-end: var(--space-6);
+    line-height: 1.6;
+  }
+
+  .contact-address {
+    font-style: normal;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .contact-email {
+    font-size: var(--text-h2);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-decoration: none;
+    word-break: break-all;
+  }
+  .contact-email:hover {
+    color: var(--accent);
+    opacity: 1;
+  }
+
+  .contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .contact-list li {
+    display: flex;
+    gap: var(--space-4);
+    align-items: baseline;
+    flex-wrap: wrap;
+  }
+
+  .contact-label {
+    color: var(--muted);
+    min-inline-size: 8ch;
+    flex-shrink: 0;
+  }
+
+  .contact-list a {
+    color: var(--ink);
+  }
+
+  @media (max-width: 360px) {
+    .contact-email {
+      font-size: var(--text-h2);
+    }
+  }
+</style>

@@ -1,0 +1,247 @@
+---
+// [slug].astro — project detail page. One per project MD file.
+// §4 sections: Problem → What I built → Constraints → What I'd change.
+
+import { getCollection, getEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({
+    params: { slug: project.slug },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { Content } = await project.render();
+const { title, summary, stack, status, role, ai_note, links, media } = project.data;
+---
+
+<Base
+  title={`${title} — Mutman Jamalaldin`}
+  description={summary}
+>
+  <main id="main">
+    <Header />
+
+    <article class="project-page">
+      <div class="container">
+
+        <!-- ── Header ──────────────────────────────────────────── -->
+        <header class="project-header">
+          <a href="/#work" class="back-link label">← Work</a>
+          <div class="project-meta">
+            <span class="label">{status}</span>
+            <span class="label">{stack.join(' · ')}</span>
+          </div>
+          <h1 class="project-title">{title}</h1>
+          <p class="project-summary">{summary}</p>
+        </header>
+
+        <div class="rule"></div>
+
+        <!-- ── Role + AI note ─────────────────────────────────── -->
+        <dl class="project-details">
+          <div class="detail-row">
+            <dt class="label">My role</dt>
+            <dd>{role}</dd>
+          </div>
+          <div class="detail-row">
+            <dt class="label">AI vs me</dt>
+            <dd>{ai_note}</dd>
+          </div>
+        </dl>
+
+        <div class="rule"></div>
+
+        <!-- ── Media ──────────────────────────────────────────── -->
+        {media.length > 0 && (
+          <div class="project-media">
+            {media.map((m) => (
+              <figure class="media-figure">
+                <img
+                  src={m.src}
+                  alt={m.alt}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </figure>
+            ))}
+          </div>
+        )}
+
+
+        <div class="rule"></div>
+
+        <!-- ── Body (Problem / What I built / Constraints / Change) -->
+        <div class="project-body prose">
+          <Content />
+        </div>
+
+        <!-- ── Links ───────────────────────────────────────────── -->
+        {links.length > 0 && (
+          <div class="rule"></div>
+          <ul class="project-links label" role="list">
+            {links.map((l) => (
+              <li><a href={l.url}>{l.label}</a></li>
+            ))}
+          </ul>
+        )}
+
+
+      </div>
+    </article>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .project-page {
+    padding-block: var(--space-12);
+  }
+
+  /* ── Header ──────────────────────────────────────────────────── */
+  .back-link {
+    display: inline-block;
+    margin-block-end: var(--space-6);
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .back-link:hover { color: var(--ink); opacity: 1; }
+
+  .project-meta {
+    display: flex;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-block-end: var(--space-3);
+  }
+
+  .project-meta .label {
+    color: var(--muted);
+  }
+
+  .project-title {
+    font-size: var(--text-display);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.0;
+    margin-block-end: var(--space-4);
+    max-inline-size: 20ch;
+  }
+
+  .project-summary {
+    color: var(--muted);
+    max-inline-size: var(--measure);
+    line-height: 1.6;
+    font-size: var(--text-body);
+  }
+
+  /* ── Rule ────────────────────────────────────────────────────── */
+  .rule {
+    border: none;
+    border-block-start: 1px solid var(--rule);
+    margin-block: var(--space-8);
+  }
+
+  /* ── Details ─────────────────────────────────────────────────── */
+  .project-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-inline-size: var(--measure);
+  }
+
+  .detail-row {
+    display: grid;
+    grid-template-columns: 10ch 1fr;
+    gap: var(--space-4);
+    align-items: baseline;
+  }
+
+  .detail-row dt {
+    color: var(--muted);
+  }
+
+  .detail-row dd {
+    color: var(--ink);
+    line-height: 1.6;
+  }
+
+  /* ── Media ───────────────────────────────────────────────────── */
+  .project-media {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .media-figure img {
+    inline-size: 100%;
+    block-size: auto;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+  }
+
+
+
+
+  /* ── Prose (Content() output) ────────────────────────────────── */
+  .prose {
+    max-inline-size: var(--measure);
+  }
+
+  .prose :global(h2) {
+    font-size: var(--text-h2);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-block-end: var(--space-3);
+    margin-block-start: var(--space-8);
+  }
+
+  .prose :global(h2:first-child) {
+    margin-block-start: 0;
+  }
+
+  .prose :global(p) {
+    color: var(--muted);
+    line-height: 1.6;
+    margin-block-end: var(--space-3);
+  }
+
+  .prose :global(p strong) {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .prose :global(code) {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono);
+    background: transparent;
+  }
+
+  /* ── Links ───────────────────────────────────────────────────── */
+  .project-links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .project-links li a {
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+
+  /* ── Responsive ──────────────────────────────────────────────── */
+  @media (max-width: 480px) {
+    .detail-row {
+      grid-template-columns: 1fr;
+      gap: var(--space-1);
+    }
+
+    .project-title {
+      font-size: clamp(2.5rem, 10vw, 4rem);
+    }
+  }
+</style>

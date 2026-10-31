@@ -1,0 +1,120 @@
+---
+// Hero.astro — §3: name, one factual line, email as plain text, link to work.
+// No badge above H1, no scroll indicator, no decorative elements.
+---
+
+<section class="hero" aria-labelledby="hero-name">
+  <div class="container">
+    <!-- Arabic name — small, above, not a headline -->
+    <p class="hero-arabic" lang="ar" dir="rtl" aria-label="Mutman Jamalaldin in Arabic">
+      مُعتمَن جمال الدين
+    </p>
+    <h1 class="hero-name" id="hero-name">Mutman Jamalaldin</h1>
+    <p class="hero-line">
+      Computer science student in Kuala Lumpur. I build web and desktop software, and I pick up new tools fast.
+    </p>
+    <p class="hero-intent">
+      Open to remote work in web development, tech support, and more.
+    </p>
+    <div class="hero-cta">
+      <a href="mailto:mutmanhejaze@gmail.com" class="cta-primary">mutmanhejaze@gmail.com</a>
+      <a href="/#work" class="cta-secondary">See the work ↓</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-block: var(--space-16) var(--space-12);
+    border-block-end: 1px solid var(--rule);
+  }
+
+  .hero-arabic {
+    font-family: var(--font-ar);
+    font-size: var(--text-mono);
+    color: var(--muted);
+    margin-block-end: var(--space-2);
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.5;
+  }
+
+  .hero-name {
+    font-size: var(--text-display);
+    font-weight: 600;
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-block-end: var(--space-4);
+    max-inline-size: 16ch;
+  }
+
+  .hero-line {
+    font-size: var(--text-body);
+    color: var(--muted);
+    max-inline-size: var(--measure);
+    line-height: 1.6;
+    margin-block-end: var(--space-2);
+  }
+
+  .hero-intent {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono);
+    color: var(--muted);
+    max-inline-size: var(--measure);
+    margin-block-end: var(--space-6);
+    letter-spacing: 0.01em;
+  }
+
+  .hero-cta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .cta-primary {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono);
+    color: var(--accent);
+    text-decoration: none;
+    border: 1px solid var(--accent);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-2);
+    border-radius: var(--radius);
+    letter-spacing: 0.01em;
+  }
+  .cta-primary:hover {
+    background-color: var(--accent);
+    color: var(--accent-ink);
+    opacity: 1;
+  }
+
+  .cta-secondary {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono);
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+  }
+  .cta-secondary:hover {
+    color: var(--ink);
+    opacity: 1;
+  }
+
+  @media (max-width: 768px) {
+    .hero {
+      padding-block: var(--space-12) var(--space-8);
+    }
+  }
+
+  @media (max-width: 360px) {
+    .hero {
+      padding-block: var(--space-8) var(--space-6);
+    }
+    .hero-cta {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>
