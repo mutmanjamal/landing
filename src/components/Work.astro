@@ -129,6 +129,9 @@ const projects = allProjects.sort((a, b) => a.data.order - b.data.order);
   }
   .project-title a:hover {
     color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
     opacity: 1;
   }
 
@@ -145,7 +148,11 @@ const projects = allProjects.sort((a, b) => a.data.order - b.data.order);
     display: inline-block; /* prevents touching the rule */
   }
   .project-link:hover {
-    opacity: 0.75;
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    opacity: 1;
   }
 
   /* ── Responsive ──────────────────────────────────────────────── */
