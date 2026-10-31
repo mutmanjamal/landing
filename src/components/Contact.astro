@@ -14,6 +14,7 @@
       <a href="mailto:mutmanhejaze@gmail.com" class="contact-email">
         mutmanhejaze@gmail.com
       </a>
+      <a href="/Mutman_CV.pdf" download class="cv-button label">Download CV</a>
       <ul class="contact-list label" role="list">
         <li>
           <span class="contact-label">Phone</span>
@@ -23,7 +24,10 @@
           <span class="contact-label">Location</span>
           <span>Kuala Lumpur, Malaysia</span>
         </li>
-        <!-- TODO(mutman): Add GitHub, LinkedIn or any other profile you want linked here -->
+        <li>
+          <span class="contact-label">GitHub</span>
+          <a href="https://github.com/mutmanjamal">github.com/mutmanjamal</a>
+        </li>
       </ul>
     </address>
   </div>
@@ -71,6 +75,24 @@
   }
   .contact-email:hover {
     color: var(--accent);
+    opacity: 1;
+  }
+
+  .cv-button {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: var(--text-mono);
+    color: var(--accent);
+    text-decoration: none;
+    border: 1px solid var(--accent);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-2);
+    border-radius: var(--radius);
+    letter-spacing: 0.01em;
+  }
+  .cv-button:hover {
+    background-color: var(--accent);
+    color: var(--accent-ink);
     opacity: 1;
   }
 

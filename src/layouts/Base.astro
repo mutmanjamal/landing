@@ -21,10 +21,14 @@ const {
   title,
   description,
   canonical,
-  ogImage = '/og.png', // TODO(mutman): design a real OG image
+  ogImage = '/og.png',
 } = Astro.props;
 
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
+
+// Absolute OG image URL that keeps the site's base path (GitHub Pages subpath).
+const siteBase = Astro.site ? Astro.site.href.replace(/\/$/, '') : '';
+const ogUrl = `${siteBase}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`;
 ---
 
 <!doctype html>
@@ -41,7 +45,7 @@ const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:image" content={new URL(ogImage, Astro.site).href} />
+    <meta property="og:image" content={ogUrl} />
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

@@ -6,9 +6,7 @@ status: in progress
 role: Designed the container layout, wrote Bash CLI tools for remote monitoring, configured the reverse proxy and networking.
 ai_note: AI drafted the initial docker-compose files. Networking, volume mounts, and reverse proxy config I worked out myself. Generated configs kept conflicting or using deprecated syntax.
 links: []
-# TODO(mutman): Any public repo for the Bash CLI tools?
 media: []
-# TODO(mutman): Add a screenshot of the service dashboard or terminal output showing services running
 order: 2
 featured: false
 ---
@@ -21,13 +19,8 @@ I wanted full control over my own data: photo backup, cloud storage, media strea
 
 A Linux server running 8+ Docker services: photo backup, cloud storage, media streaming, private search, automation, and a few others.
 
-<!-- TODO(mutman): List the actual services (e.g. Immich, Nextcloud, Jellyfin, SearXNG, n8n). Real list beats vague count. -->
-
 I wrote custom Bash CLI tools to check service status, restart containers, and view logs over SSH. Everything is reachable through a Tailscale network, so I don't need to expose ports to the internet.
 
 ## Constraints
 
 Student budget. Hardware I already had. Stability mattered more than features. If it went down at 3am I needed it to recover on its own or be fixable from my phone.
-
-<!-- TODO(mutman): What's the actual uptime been? Any incident worth describing? -->
-
