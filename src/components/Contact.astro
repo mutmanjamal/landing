@@ -1,31 +1,34 @@
 ---
 // Contact.astro — §3: email as text, then links. No form (optional). Education in footer.
+import { ui, getLang } from '../i18n/ui';
+
+const lang = getLang(Astro.url.pathname);
+const t = ui[lang];
 ---
 
 <section id="contact" aria-labelledby="contact-heading">
   <div class="section-rule-full"></div>
   <div class="container">
-    <h2 class="section-heading" id="contact-heading">Contact</h2>
+    <h2 class="section-heading" id="contact-heading">{t.contact.heading}</h2>
     <p class="contact-line">
-      Looking for remote work in web development, technical support, or general tech.
-      If something here caught your attention, write to me directly.
+      {t.contact.line}
     </p>
     <address class="contact-address">
       <a href="mailto:mutmanhejaze@gmail.com" class="contact-email">
         mutmanhejaze@gmail.com
       </a>
-      <a href="/Mutman_CV.pdf" download class="cv-button label">Download CV</a>
+      <a href="/Mutman_CV.pdf" download class="cv-button label">{t.contact.downloadCv}</a>
       <ul class="contact-list label" role="list">
         <li>
-          <span class="contact-label">Phone</span>
+          <span class="contact-label">{t.contact.phone}</span>
           <a href="tel:+601161765456">+60 11-6176 5456</a>
         </li>
         <li>
-          <span class="contact-label">Location</span>
+          <span class="contact-label">{t.contact.location}</span>
           <span>Kuala Lumpur, Malaysia</span>
         </li>
         <li>
-          <span class="contact-label">GitHub</span>
+          <span class="contact-label">{t.contact.github}</span>
           <a href="https://github.com/mutmanjamal">github.com/mutmanjamal</a>
         </li>
       </ul>

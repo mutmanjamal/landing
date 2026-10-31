@@ -3,15 +3,22 @@
 // Fix 5: rule is now a sibling outside the article, so padding-block on the row works correctly.
 // Fix 6: stack tags rendered as <li> flex items — no joined string, no dangling separator.
 // Fix 7: heading dead space removed — section padding tightened, heading sits flush above first rule.
+// i18n: heading, status, summaries and "read more" come from the /ar/ URL prefix.
 
 import { getCollection } from 'astro:content';
+import { ui, getLang } from '../i18n/ui';
+
 const allProjects = await getCollection('projects');
 const projects = allProjects.sort((a, b) => a.data.order - b.data.order);
+
+const lang = getLang(Astro.url.pathname);
+const t = ui[lang];
+const base = lang === 'ar' ? '/ar/' : '/';
 ---
 
 <section id="work" aria-labelledby="work-heading">
   <div class="container work-header">
-    <h2 class="section-heading" id="work-heading">Work</h2>
+    <h2 class="section-heading" id="work-heading">{t.work.heading}</h2>
   </div>
 
   {projects.map((project) => (
@@ -21,7 +28,7 @@ const projects = allProjects.sort((a, b) => a.data.order - b.data.order);
         <div class="container project-row-inner">
 
           <div class="project-meta">
-            <span class="label project-status">{project.data.status}</span>
+            <span class="label project-status">{t.work.status[project.data.status]}</span>
             <ul class="project-stack-list" role="list">
               {project.data.stack.map((tag) => (
                 <li class="label">{tag}</li>
@@ -31,11 +38,11 @@ const projects = allProjects.sort((a, b) => a.data.order - b.data.order);
 
           <div class="project-body">
             <h3 class="project-title">
-              <a href={`/projects/${project.slug}`}>{project.data.title}</a>
+              <a href={`${base}projects/${project.slug}`}>{project.data.title}</a>
             </h3>
-            <p class="project-summary">{project.data.summary}</p>
-            <a href={`/projects/${project.slug}`} class="project-link label">
-              Read more →
+            <p class="project-summary">{t.work.summaries[project.slug] ?? project.data.summary}</p>
+            <a href={`${base}projects/${project.slug}`} class="project-link label">
+              {t.work.readMore}
             </a>
           </div>
 

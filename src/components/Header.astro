@@ -1,18 +1,39 @@
 ---
 // Header.astro — §3 rule: name left, 3 text links right. No logo, no hamburger on desktop.
 // Mobile: nav stacks below name. No hamburger overlay (JS-free).
+// Language: strings come from the /ar/ URL prefix; the last link toggles languages.
+
+import { ui, getLang } from '../i18n/ui';
+
+const lang = getLang(Astro.url.pathname);
+const t = ui[lang];
+const base = lang === 'ar' ? '/ar/' : '/';
+
+const path = Astro.url.pathname;
+const otherLang = lang === 'ar' ? 'en' : 'ar';
+const otherPath =
+  lang === 'ar'
+    ? path.replace(/^\/ar/, '') || '/'
+    : '/ar' + (path === '/' ? '/' : path);
 ---
 
 <header class="site-header">
   <div class="container header-inner">
-    <a href="/" class="header-name" aria-label="Mutman Jamalaldin — home">
-      Mutman Jamalaldin
+    <a href={base} class="header-name" aria-label={`${t.siteName} — home`}>
+      {t.siteName}
     </a>
     <nav aria-label="Main navigation">
       <ul class="header-nav" role="list">
-        <li><a href="/#work">Work</a></li>
-        <li><a href="/#stack">Stack</a></li>
-        <li><a href="/#contact">Contact</a></li>
+        <li><a href={`${base}#work`}>{t.nav.work}</a></li>
+        <li><a href={`${base}#stack`}>{t.nav.stack}</a></li>
+        <li><a href={`${base}#contact`}>{t.nav.contact}</a></li>
+        <li>
+          <a
+            href={otherPath}
+            class="lang-toggle"
+            onclick={`localStorage.setItem('lang','${otherLang}')`}
+          >{t.langLabel}</a>
+        </li>
       </ul>
     </nav>
   </div>
@@ -48,6 +69,7 @@
     display: flex;
     gap: var(--space-4);
     flex-wrap: wrap;
+    align-items: baseline;
   }
 
   .header-nav a {
@@ -61,6 +83,17 @@
   .header-nav a:hover {
     color: var(--ink);
     opacity: 1;
+  }
+
+  .lang-toggle {
+    border: 1px solid var(--rule);
+    padding-block: 2px;
+    padding-inline: var(--space-2);
+    border-radius: var(--radius);
+  }
+  .lang-toggle:hover {
+    border-color: var(--ink);
+    color: var(--ink);
   }
 
   @media (max-width: 360px) {

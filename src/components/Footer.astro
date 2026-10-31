@@ -1,13 +1,17 @@
 ---
 // Footer.astro — §3: one line. Education lives here.
+import { ui, getLang } from '../i18n/ui';
+
+const lang = getLang(Astro.url.pathname);
+const t = ui[lang];
 ---
 
 <footer class="site-footer">
   <div class="container footer-inner">
     <span class="label">
-      Mutman Jamalaldin · UGM Centre of Foundation Studies, Kuala Lumpur (in progress)
+      {t.footer.education}
     </span>
-    <span class="label">Vanilla HTML, CSS, JS · Built with Astro</span>
+    <span class="label">{t.footer.built}</span>
   </div>
 </footer>
 

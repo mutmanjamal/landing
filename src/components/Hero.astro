@@ -1,21 +1,28 @@
 ---
 // Hero.astro — §3: name, one factual line, email as plain text, link to work.
 // No badge above H1, no scroll indicator, no decorative elements.
+// Arabic version shows the Arabic name when the URL is under /ar/.
+
+import { ui, getLang } from '../i18n/ui';
+
+const lang = getLang(Astro.url.pathname);
+const t = ui[lang];
+const base = lang === 'ar' ? '/ar/' : '/';
 ---
 
 <section class="hero" aria-labelledby="hero-name">
   <div class="container">
-    <h1 class="hero-name" id="hero-name">Mutman Jamalaldin</h1>
+    <h1 class="hero-name" id="hero-name">{t.hero.name}</h1>
     <p class="hero-line">
-      Computer science student in Kuala Lumpur. I build web and desktop software, and I pick up new tools fast.
+      {t.hero.line}
     </p>
     <p class="hero-intent">
-      Open to remote work in web development, tech support, and more.
+      {t.hero.intent}
     </p>
     <div class="hero-cta">
       <a href="mailto:mutmanhejaze@gmail.com" class="cta-primary">mutmanhejaze@gmail.com</a>
-      <a href="/Mutman_CV.pdf" download class="cta-primary">Download CV</a>
-      <a href="/#work" class="cta-secondary">See the work ↓</a>
+      <a href="/Mutman_CV.pdf" download class="cta-primary">{t.hero.downloadCv}</a>
+      <a href={`${base}#work`} class="cta-secondary">{t.hero.seeWork}</a>
     </div>
   </div>
 </section>

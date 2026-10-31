@@ -1,6 +1,7 @@
 ---
 // Base.astro — HTML shell shared by all pages.
 // Fonts: IBM Plex Sans 400/600, IBM Plex Mono 400 (self-hosted via Fontsource).
+// Arabic pages also import IBM Plex Sans Arabic in their own frontmatter.
 
 import '@fontsource/ibm-plex-sans/400.css';
 import '@fontsource/ibm-plex-sans/600.css';
@@ -13,6 +14,7 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description: string;
+  lang?: 'en' | 'ar';
   canonical?: string;
   ogImage?: string;
 }
@@ -20,6 +22,7 @@ interface Props {
 const {
   title,
   description,
+  lang = 'en',
   canonical,
   ogImage = '/og.png',
 } = Astro.props;
@@ -29,10 +32,13 @@ const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
 // Absolute OG image URL that keeps the site's base path (GitHub Pages subpath).
 const siteBase = Astro.site ? Astro.site.href.replace(/\/$/, '') : '';
 const ogUrl = `${siteBase}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`;
+
+const dir = lang === 'ar' ? 'rtl' : 'ltr';
+const skip = lang === 'ar' ? 'تخطَّ إلى المحتوى' : 'Skip to content';
 ---
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang={lang} dir={dir}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -50,10 +56,28 @@ const ogUrl = `${siteBase}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`;
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
+    <!-- Language auto-detect: respect an explicit choice, otherwise the browser language -->
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem('lang');
+          var p = location.pathname;
+          var isAr = p === '/ar/' || p.indexOf('/ar/') === 0;
+          var browserAr = ((navigator.language || '').toLowerCase().indexOf('ar') === 0);
+          var wantAr = stored ? stored === 'ar' : browserAr;
+          if (wantAr && !isAr) {
+            location.replace('/ar' + (p === '/' ? '/' : p));
+          } else if (!wantAr && isAr) {
+            location.replace(p.replace(/^\/ar/, '') || '/');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <slot name="head" />
   </head>
   <body>
-    <a href="#main" class="skip-link">Skip to content</a>
+    <a href="#main" class="skip-link">{skip}</a>
     <slot />
   </body>
 </html>

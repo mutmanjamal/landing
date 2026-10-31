@@ -1,30 +1,34 @@
 ---
 // Stack.astro — §3: grouped list of tools, no skill bars, no percentages, no logo walls.
+import { ui, getLang } from '../i18n/ui';
+
+const lang = getLang(Astro.url.pathname);
+const t = ui[lang];
 ---
 
 <section id="stack" aria-labelledby="stack-heading">
   <div class="section-rule-full"></div>
   <div class="container">
-    <h2 class="section-heading" id="stack-heading">Stack</h2>
+    <h2 class="section-heading" id="stack-heading">{t.stack.heading}</h2>
     <dl class="stack-list">
       <div class="stack-group">
-        <dt class="label">Languages</dt>
+        <dt class="label">{t.stack.groups.languages}</dt>
         <dd>JavaScript · Python · Bash · HTML · CSS · some SQL</dd>
       </div>
       <div class="stack-group">
-        <dt class="label">Environments</dt>
+        <dt class="label">{t.stack.groups.environments}</dt>
         <dd>Node.js · Electron · Flask · Linux (Debian/Ubuntu)</dd>
       </div>
       <div class="stack-group">
-        <dt class="label">Infrastructure</dt>
+        <dt class="label">{t.stack.groups.infrastructure}</dt>
         <dd>Docker · Docker Compose · Tailscale · SSH · Nginx</dd>
       </div>
       <div class="stack-group">
-        <dt class="label">Data</dt>
+        <dt class="label">{t.stack.groups.data}</dt>
         <dd>SQLite · basic PostgreSQL</dd>
       </div>
       <div class="stack-group">
-        <dt class="label">Tools</dt>
+        <dt class="label">{t.stack.groups.tools}</dt>
         <dd>Git · VS Code · Claude · Gemini · Ollama (local models)</dd>
       </div>
     </dl>
@@ -73,9 +77,6 @@
     font-size: var(--text-body);
     line-height: 1.6;
   }
-
-
-
 
   @media (max-width: 480px) {
     .stack-group {
