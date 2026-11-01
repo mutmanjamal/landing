@@ -338,6 +338,59 @@ app.post('/api/image', upload.single('image'), async (req, res) => {
   }
 });
 
+app.get('/api/files', (req, res) => {
+  try {
+    const cvPath = path.join(PUBLIC_DIR, 'Mutman_CV.pdf');
+    let cv = null;
+    if (fs.existsSync(cvPath)) {
+      const st = fs.statSync(cvPath);
+      cv = { name: 'Mutman_CV.pdf', url: '/Mutman_CV.pdf', size: st.size, modified: st.mtime.toISOString() };
+    }
+    const imgDir = path.join(PUBLIC_DIR, 'images');
+    let images = [];
+    if (fs.existsSync(imgDir)) {
+      images = fs
+        .readdirSync(imgDir)
+        .filter((f) => /^[A-Za-z0-9._-]+$/.test(f))
+        .map((f) => {
+          const st = fs.statSync(path.join(imgDir, f));
+          return { name: f, url: `/images/${f}`, size: st.size, modified: st.mtime.toISOString() };
+        })
+        .sort((a, b) => b.modified.localeCompare(a.modified));
+    }
+    res.json({ cv, images });
+  } catch (e) {
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
+
+app.delete('/api/files/cv', async (req, res) => {
+  try {
+    const p = path.join(PUBLIC_DIR, 'Mutman_CV.pdf');
+    if (fs.existsSync(p)) fs.unlinkSync(p);
+    await scheduleRebuild();
+    res.json({ ok: buildState.last && buildState.last.ok, build: buildState });
+  } catch (e) {
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
+
+app.delete('/api/files/image/:name', async (req, res) => {
+  try {
+    const name = req.params.name;
+    if (!/^[A-Za-z0-9._-]+$/.test(name) || name.includes('..')) {
+      return res.status(400).json({ error: 'Invalid file name' });
+    }
+    const p = path.join(PUBLIC_DIR, 'images', name);
+    if (!fs.existsSync(p)) return res.status(404).json({ error: 'Not found' });
+    fs.unlinkSync(p);
+    await scheduleRebuild();
+    res.json({ ok: buildState.last && buildState.last.ok, build: buildState });
+  } catch (e) {
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
+
 app.get('/api/stats', async (req, res) => {
   if (!GC_TOKEN) return res.json({ configured: false });
   const days = Math.max(1, Math.min(Number(req.query.days) || 30, 365));

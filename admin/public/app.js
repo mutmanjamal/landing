@@ -247,6 +247,7 @@ $('#cv-form').addEventListener('submit', async (e) => {
     const res = await api('api/cv', { method: 'POST', body: new FormData(form) });
     buildResult(res.build);
     form.reset();
+    await loadFiles();
   } catch (err) {
     toast(err.message, true);
   }
@@ -261,6 +262,7 @@ $('#image-form').addEventListener('submit', async (e) => {
     $('#image-out').textContent = `Uploaded: ${res.path}`;
     toast('Image uploaded ✓');
     form.reset();
+    await loadFiles();
   } catch (err) {
     toast(err.message, true);
   }
@@ -312,12 +314,88 @@ function sumCounts(total) {
 
 $('#stats-days').addEventListener('change', loadStats);
 
+/* ───────────── files (CV & images) ───────────── */
+
+function fmtSize(n) {
+  if (n == null) return '';
+  if (n < 1024) return `${n} B`;
+  if (n < 1048576) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / 1048576).toFixed(1)} MB`;
+}
+
+function fmtDate(iso) {
+  return iso ? new Date(iso).toLocaleString() : '';
+}
+
+async function loadFiles() {
+  try {
+    const files = await api('api/files');
+    renderFiles(files);
+  } catch (e) {
+    /* the files tab may not be open; ignore */
+  }
+}
+
+function renderFiles(files) {
+  const cvEl = $('#cv-status');
+  if (files.cv) {
+    cvEl.innerHTML = `
+      <span class="mono">${esc(files.cv.name)}</span> — ${fmtSize(files.cv.size)}
+      · updated ${fmtDate(files.cv.modified)}
+      <a href="${esc(files.cv.url)}" target="_blank" rel="noopener" style="margin-inline-start:8px">open</a>
+      <button class="danger" id="del-cv" style="margin-inline-start:8px">Delete CV</button>`;
+    $('#del-cv').addEventListener('click', async () => {
+      if (!confirm('Delete the CV? The Download CV buttons will point to a missing file.')) return;
+      try {
+        building();
+        const res = await api('api/files/cv', { method: 'DELETE' });
+        buildResult(res.build);
+        await loadFiles();
+      } catch (err) {
+        toast(err.message, true);
+      }
+    });
+  } else {
+    cvEl.innerHTML = '<span class="hint">No CV uploaded.</span>';
+  }
+
+  const list = $('#images-list');
+  if (!files.images.length) {
+    list.innerHTML = '<p class="hint">No images yet.</p>';
+    return;
+  }
+  list.innerHTML = `
+    <div class="plist">
+      ${files.images.map((img) => `
+        <div class="prow">
+          <a class="mono" href="${esc(img.url)}" target="_blank" rel="noopener">${esc(img.url)}</a>
+          <span class="m">${fmtSize(img.size)}</span>
+          <span class="spacer"></span>
+          <button class="danger" data-del-img="${esc(img.name)}">Delete</button>
+        </div>`).join('')}
+    </div>`;
+  list.querySelectorAll('[data-del-img]').forEach((b) => {
+    b.addEventListener('click', async () => {
+      if (!confirm(`Delete ${b.dataset.delImg}?`)) return;
+      try {
+        building();
+        const res = await api('api/files/image/' + encodeURIComponent(b.dataset.delImg), { method: 'DELETE' });
+        buildResult(res.build);
+        await loadFiles();
+      } catch (err) {
+        toast(err.message, true);
+      }
+    });
+  });
+}
+
 /* ───────────── boot ───────────── */
 
 async function refresh() {
   state = await api('api/state');
   renderSections();
   renderProjects();
+  await loadFiles();
 }
 
 refresh().catch((e) => toast(`Failed to load: ${e.message}`, true));

@@ -131,6 +131,7 @@ button.ghost:hover { color: var(--ink); border-color: var(--ink); }
   display: flex; align-items: flex-start; justify-content: center;
   padding: 40px 16px; overflow-y: auto; z-index: 20;
 }
+.modal[hidden] { display: none; }
 .modal-card {
   background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius);
   width: min(760px, 100%); padding: 18px;
