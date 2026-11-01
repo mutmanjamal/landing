@@ -1,0 +1,16 @@
+[Unit]
+Description=mutman.tech admin panel
+After=network.target
+
+[Service]
+Type=simple
+User=azureuser
+Group=azureuser
+WorkingDirectory=/home/azureuser/portfolio/admin
+EnvironmentFile=/etc/mutman-admin.env
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

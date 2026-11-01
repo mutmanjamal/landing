@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mutman.tech — admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><strong>mutman.tech</strong> <span class="tag">admin</span></div>
+    <nav class="tabs">
+      <button data-tab="sections" class="active">Sections</button>
+      <button data-tab="projects">Projects</button>
+      <button data-tab="files">CV &amp; images</button>
+      <button data-tab="stats">Stats</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-sections" class="tab active">
+      <div class="bar">
+        <h2>Site text</h2>
+        <button id="save-sections" class="primary">Save &amp; publish</button>
+      </div>
+      <p class="hint">Every string on the site. Saving rebuilds the site and publishes it.</p>
+      <div id="sections-grid" class="grid2"></div>
+    </section>
+
+    <section id="tab-projects" class="tab">
+      <div class="bar">
+        <h2>Projects</h2>
+        <button id="new-project" class="primary">+ New project</button>
+      </div>
+      <div id="project-list"></div>
+    </section>
+
+    <section id="tab-files" class="tab">
+      <h2>CV</h2>
+      <p class="hint">Upload a PDF to replace <span class="mono">/Mutman_CV.pdf</span>.</p>
+      <form id="cv-form" class="row">
+        <input type="file" name="cv" accept="application/pdf" required>
+        <button class="primary">Upload CV</button>
+      </form>
+
+      <h2>Images</h2>
+      <p class="hint">Upload screenshots for project pages. The URL path is shown after upload.</p>
+      <form id="image-form" class="row">
+        <input type="file" name="image" accept="image/png,image/jpeg,image/webp,image/svg+xml" required>
+        <button class="primary">Upload image</button>
+      </form>
+      <p id="image-out" class="mono"></p>
+    </section>
+
+    <section id="tab-stats" class="tab">
+      <div class="bar">
+        <h2>Visits</h2>
+        <select id="stats-days">
+          <option value="7">7 days</option>
+          <option value="30" selected>30 days</option>
+          <option value="90">90 days</option>
+        </select>
+      </div>
+      <div id="stats-out"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="modal" class="modal" hidden>
+    <div class="modal-card">
+      <div class="bar">
+        <h2 id="modal-title">Project</h2>
+        <button id="modal-close" class="ghost">×</button>
+      </div>
+      <div class="form-grid">
+        <label>Slug<input id="p-slug" placeholder="my-project"></label>
+        <label>Title<input id="p-title"></label>
+        <label class="full">Summary<textarea id="p-summary" rows="2"></textarea></label>
+        <label>Stack (comma separated)<input id="p-stack" placeholder="Astro, CSS"></label>
+        <label>Status<select id="p-status">
+          <option value="shipped">shipped</option>
+          <option value="in progress">in progress</option>
+        </select></label>
+        <label>Order<input id="p-order" type="number" min="1" value="1"></label>
+        <label class="check"><input id="p-featured" type="checkbox"> Featured</label>
+        <label class="full">My role<textarea id="p-role" rows="2"></textarea></label>
+        <label class="full">AI note<textarea id="p-ai" rows="2"></textarea></label>
+        <label class="full">Body (Markdown)<textarea id="p-body" rows="10"></textarea></label>
+      </div>
+      <div class="bar">
+        <button id="p-delete" class="danger">Delete</button>
+        <span class="spacer"></span>
+        <button id="p-save" class="primary">Save &amp; publish</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

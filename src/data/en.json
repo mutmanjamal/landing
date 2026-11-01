@@ -1,0 +1,52 @@
+{
+  "siteName": "Mutman Jamalaldin",
+  "langLabel": "عربي",
+  "skip": "Skip to content",
+  "nav": { "work": "Work", "stack": "Stack", "contact": "Contact" },
+  "hero": {
+    "name": "Mutman Jamalaldin",
+    "line": "Computer science student in Kuala Lumpur. I build web and desktop software, and I pick up new tools fast.",
+    "intent": "Open to remote work in web development, tech support, and more.",
+    "seeWork": "See the work ↓",
+    "downloadCv": "Download CV"
+  },
+  "work": {
+    "heading": "Work",
+    "readMore": "Read more →",
+    "status": { "shipped": "shipped", "in progress": "in progress" },
+    "summaries": {
+      "sudan-pos": "Built a multi-device restaurant POS that syncs orders live over local WiFi with no internet dependency.",
+      "homelab": "Set up and maintain a self-hosted Linux server running 8+ containerised services, managed over SSH from any device on my Tailscale network.",
+      "gaming-marketplace": "Built a static e-commerce site for a client selling digital game cards, optimised for mobile and handed off with no framework dependency.",
+      "smart-calendar": "Building a CLI tool that aggregates class schedules and deadlines from multiple sources into one place, with a Flask web interface for phone input."
+    }
+  },
+  "stack": {
+    "heading": "Stack",
+    "groups": {
+      "languages": "Languages",
+      "environments": "Environments",
+      "infrastructure": "Infrastructure",
+      "data": "Data",
+      "tools": "Tools"
+    }
+  },
+  "contact": {
+    "heading": "Contact",
+    "line": "Looking for remote work in web development, technical support, or general tech. If something here caught your attention, write to me directly.",
+    "phone": "Phone",
+    "location": "Location",
+    "github": "GitHub",
+    "downloadCv": "Download CV"
+  },
+  "footer": {
+    "education": "Mutman Jamalaldin · UGM Centre of Foundation Studies, Kuala Lumpur (in progress)",
+    "built": "Vanilla HTML, CSS, JS · Built with Astro"
+  },
+  "project": {
+    "back": "← Work",
+    "myRole": "My role",
+    "aiNote": "AI vs me",
+    "links": "Links"
+  }
+}

@@ -1,0 +1,26 @@
+# Caddy config for mutman.tech with the admin panel at /admin/
+#
+# 1. Generate a password hash:
+#      caddy hash-password --plaintext 'your-password-here'
+# 2. Paste the hash into the basicauth block below.
+# 3. Caddy 2.8+ renamed basicauth -> basic_auth. Check with `caddy version`:
+#      - v2.7.x and older: use `basicauth`
+#      - v2.8+            : use `basic_auth`
+# 4. sudo systemctl reload caddy
+
+mutman.tech, www.mutman.tech {
+	root * /var/www/mutman.tech
+	encode gzip
+
+	# /admin without trailing slash -> /admin/
+	redir /admin /admin/ 308
+
+	handle_path /admin/* {
+		basicauth {
+			mutman $2a$14$REPLACE_WITH_THE_HASH_FROM_CADDY_HASH_PASSWORD
+		}
+		reverse_proxy 127.0.0.1:3000
+	}
+
+	file_server
+}
