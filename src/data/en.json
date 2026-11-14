@@ -5,8 +5,8 @@
   "nav": { "work": "Work", "stack": "Stack", "contact": "Contact" },
   "hero": {
     "name": "Mutman Jamalaldin",
-    "line": "Computer science student in Kuala Lumpur. I build web and desktop software, and I pick up new tools fast.",
-    "intent": "Open to remote work in web development, tech support, and more.",
+    "line": "Computer science student in Kuala Lumpur. I build web and desktop tools for offline networks, existing hardware, and small budgets.",
+    "intent": "Looking for remote web development work; also available for technical support.",
     "seeWork": "See the work ↓",
     "downloadCv": "Download CV"
   },

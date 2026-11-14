@@ -14,7 +14,7 @@ const t = ui[lang];
       {t.contact.line}
     </p>
     <address class="contact-address">
-      <a href="mailto:mutmanhejaze@gmail.com" class="contact-email">
+      <a href="mailto:mutmanhejaze@gmail.com" class="contact-email" dir="ltr">
         mutmanhejaze@gmail.com
       </a>
       <a href="/Mutman_CV.pdf" download class="cv-button label">{t.contact.downloadCv}</a>
@@ -69,12 +69,13 @@ const t = ui[lang];
   }
 
   .contact-email {
+    align-self: flex-start;
     font-size: var(--text-h2);
     font-weight: 600;
     letter-spacing: -0.01em;
     color: var(--ink);
     text-decoration: none;
-    word-break: break-all;
+    overflow-wrap: anywhere;
   }
   .contact-email:hover {
     color: var(--accent);
@@ -122,9 +123,18 @@ const t = ui[lang];
     color: var(--ink);
   }
 
-  @media (max-width: 360px) {
+  @media (max-width: 480px) {
     .contact-email {
-      font-size: var(--text-h2);
+      font-size: 1.25rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .cv-button,
+    .contact-list a {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 44px;
     }
   }
 </style>

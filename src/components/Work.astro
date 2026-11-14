@@ -162,6 +162,16 @@ const base = lang === 'ar' ? '/ar/' : '/';
     opacity: 1;
   }
 
+  @media (max-width: 768px) {
+    .project-link {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 44px;
+      padding-inline: var(--space-1);
+      margin-inline-start: calc(-1 * var(--space-1));
+    }
+  }
+
   /* ── Responsive ──────────────────────────────────────────────── */
   @media (max-width: 768px) {
     .project-row-inner {

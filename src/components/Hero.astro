@@ -100,11 +100,23 @@ const base = lang === 'ar' ? '/ar/' : '/';
     .hero {
       padding-block: var(--space-12) var(--space-8);
     }
+    .cta-primary,
+    .cta-secondary {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 44px;
+    }
+    .cta-secondary {
+      padding-inline: var(--space-1);
+    }
   }
 
   @media (max-width: 360px) {
     .hero {
       padding-block: var(--space-8) var(--space-6);
+    }
+    .hero-name {
+      font-size: 2.75rem;
     }
     .hero-cta {
       flex-direction: column;
