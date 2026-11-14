@@ -53,7 +53,7 @@ module.exports = function (
     return {
       goatcounter: { configured: !!c.token, url: c.url },
       github: { repository: "mutmanjamal/landing", configured: true },
-      uptime: { provider: "built-in", independent: false },
+      uptime: { provider: "GitHub Actions", independent: true },
     };
   }
   async function goat(c, endpoint) {
@@ -201,7 +201,7 @@ module.exports = function (
     const data = {
       checkedAt: new Date().toISOString(),
       scope:
-        "Checks run from this VM; they cannot detect or alert when the entire VM is offline.",
+        "Detailed checks run from this VM and cannot detect a complete VM outage. External GitHub Actions availability checks run separately.",
       website,
       services: { caddy, admin },
       server: {
@@ -220,7 +220,7 @@ module.exports = function (
       return res.json(cache.get("github").data);
     try {
       const response = await fetcher(
-        "https://api.github.com/repos/mutmanjamal/landing/actions/runs?branch=main&per_page=3",
+        "https://api.github.com/repos/mutmanjamal/landing/actions/runs?branch=main&per_page=10",
         {
           headers: {
             Accept: "application/vnd.github+json",
@@ -239,7 +239,7 @@ module.exports = function (
       const data = {
         repository: "mutmanjamal/landing",
         checkedAt: new Date().toISOString(),
-        note: "GitHub Actions builds; these are separate from publication to the Azure website.",
+        note: "GitHub builds and external HTTPS availability checks. Availability is scheduled every 15 minutes but may be delayed; failure notifications depend on your GitHub settings.",
         runs: (body.workflow_runs || []).map((run) => ({
           name: run.name,
           status: run.status,

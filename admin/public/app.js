@@ -714,10 +714,10 @@ async function health() {
   if (checks[1].status === "fulfilled") {
     const d = checks[1].value;
     $("#github-status").innerHTML =
-      `<h2>GitHub build status</h2><p class="muted">${esc(d.note)}</p>${d.runs.map((run) => `<div class="revision"><div><a href="${esc(run.url)}" target="_blank" rel="noopener">${esc(run.name)} ↗</a><p>Commit ${esc(run.commit)} · ${esc(new Date(run.updated).toLocaleString())}</p></div><span class="badge ${run.conclusion === "success" ? "" : "hidden"}">${esc(run.conclusion || run.status)}</span></div>`).join("") || "<p>No workflow runs found.</p>"}`;
+      `<h2>GitHub builds & availability</h2><p class="muted">${esc(d.note)}</p><p class="notice">External website monitoring uses your existing GitHub repository. Open the Website availability run for its most recent result.</p>${d.runs.map((run) => `<div class="revision"><div><a href="${esc(run.url)}" target="_blank" rel="noopener">${esc(run.name)} ↗</a><p>Commit ${esc(run.commit)} · ${esc(new Date(run.updated).toLocaleString())}</p></div><span class="badge ${run.conclusion === "success" ? "" : "hidden"}">${esc(run.conclusion || run.status)}</span></div>`).join("") || "<p>No workflow runs found.</p>"}`;
   } else
     $("#github-status").innerHTML =
-      '<h2>GitHub build status</h2><p class="muted">' +
+      '<h2>GitHub builds & availability</h2><p class="muted">' +
       esc(checks[1].reason.message) +
       "</p>";
 }
