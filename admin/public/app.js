@@ -171,7 +171,6 @@ function openModal(project) {
   $('#p-order').value = project ? project.order : state.projects.length + 1;
   $('#p-featured').checked = project ? project.featured : false;
   $('#p-role').value = project ? project.role : '';
-  $('#p-ai').value = project ? project.ai_note : '';
   $('#p-body').value = project ? project.body : '## Problem\n\n\n\n## What I built\n\n\n\n## Constraints\n';
   $('#p-delete').hidden = !project;
   $('#modal').hidden = false;
@@ -196,7 +195,6 @@ $('#p-save').addEventListener('click', async () => {
     order: Number($('#p-order').value) || 1,
     featured: $('#p-featured').checked,
     role: $('#p-role').value,
-    ai_note: $('#p-ai').value,
     body: $('#p-body').value,
   };
   try {

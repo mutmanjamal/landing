@@ -4,7 +4,6 @@ summary: Built a multi-device restaurant POS that syncs orders live over local W
 stack: [Electron, WebSockets, SQLite, Node.js]
 status: shipped
 role: Chose the architecture, designed the database schema, debugged WebSocket sync failures and receipt printer encoding.
-ai_note: AI scaffolded the Electron boilerplate and WebSocket server. I rewrote the sync and reconnection logic from scratch. The generated version didn't handle conflicts or dropped connections.
 links: []
 media: []
 order: 1

@@ -4,7 +4,6 @@ summary: Set up and maintain a self-hosted Linux server running 8+ containerised
 stack: [Docker, Linux, Bash, SSH, Tailscale]
 status: in progress
 role: Designed the container layout, wrote Bash CLI tools for remote monitoring, configured the reverse proxy and networking.
-ai_note: AI drafted the initial docker-compose files. Networking, volume mounts, and reverse proxy config I worked out myself. Generated configs kept conflicting or using deprecated syntax.
 links: []
 media: []
 order: 2

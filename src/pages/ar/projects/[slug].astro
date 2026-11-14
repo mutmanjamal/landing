@@ -20,7 +20,7 @@ export async function getStaticPaths() {
 
 const { project } = Astro.props;
 const { Content } = await project.render();
-const { title, summary, stack, status, role, ai_note, links, media } = project.data;
+const { title, summary, stack, status, role, links, media } = project.data;
 const t = ui.ar;
 const statusAr = t.work.status[status];
 const summaryAr = t.work.summaries[project.slug] ?? summary;
@@ -50,15 +50,11 @@ const summaryAr = t.work.summaries[project.slug] ?? summary;
 
         <div class="rule"></div>
 
-        <!-- ── Role + AI note ─────────────────────────────────── -->
+        <!-- ── Role ───────────────────────────────────────────── -->
         <dl class="project-details">
           <div class="detail-row">
             <dt class="label">{t.project.myRole}</dt>
             <dd>{role}</dd>
-          </div>
-          <div class="detail-row">
-            <dt class="label">{t.project.aiNote}</dt>
-            <dd>{ai_note}</dd>
           </div>
         </dl>
 

@@ -4,7 +4,6 @@ summary: Built a static e-commerce site for a client selling digital game cards,
 stack: [HTML, CSS, JavaScript]
 status: shipped
 role: Client communication, requirements, all front-end code, responsive layout.
-ai_note: AI generated the initial page layout. I rewrote the responsive breakpoints and all interactive elements by hand. The generated version used JavaScript for transitions that CSS handles fine.
 links: []
 media: []
 order: 3

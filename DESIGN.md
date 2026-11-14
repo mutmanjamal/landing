@@ -7,7 +7,7 @@ If a request conflicts with it, say so instead of silently picking one.
 
 One reader, one question: *can this person build the thing I need?*
 Owner: Mutman, foundation student, Kuala Lumpur. Native Arabic, working English.
-He designs and directs full software builds (POS system, self-hosted infrastructure) with AI coding tools and owns architecture, decisions and debugging. **This honesty stays on the site.** It is specific and it is a strength. Never hide it and never inflate it.
+He builds practical software and maintains self-hosted infrastructure. Describe his role and decisions through verifiable project details.
 Goal: remote/online work in web development, technical support, general tech.
 
 ## 1. Stack (do not substitute)
@@ -74,7 +74,7 @@ Cut anything that does not help a stranger decide to hire him.
 
 ## 4. Project entries (content schema)
 
-Each project file must have: `title`, `summary` (one sentence, an outcome), `stack[]`, `status` (shipped / in progress), `role` (what Mutman decided/did), `ai_note` (what AI wrote vs what he owned), `links[]`, `media[]` (real screenshots), `order`.
+Each project file must have: `title`, `summary` (one sentence, an outcome), `stack[]`, `status` (shipped / in progress), `role` (what Mutman decided/did), `links[]`, `media[]` (real screenshots), `order`.
 Body sections: **Problem → What I built → Constraints → What I'd change.**
 Name the constraint (solo, student, offline-first, budget). Numbers only if Mutman provides them. **Never invent metrics, clients, testimonials, dates or logos.** If a fact is missing, leave a visible `TODO(mutman)` and list it in your reply.
 
@@ -84,9 +84,8 @@ Name the constraint (solo, student, offline-first, budget). Numbers only if Mutm
 - The cover-the-name test: if a sentence still works on someone else's portfolio, rewrite it.
 - Banned words and moves: passionate, cutting-edge, seamless, robust, leverage, empower, elevate, unlock, journey, "crafting", "in today's fast-paced", "not just X, but Y", rule-of-three lists, em-dash chains, rhetorical questions as headlines, emoji, exclamation marks.
 - Say what he did and what happened. "Built offline mode and hardware-based licensing for a restaurant POS" beats "Delivered a robust solution."
-- Keep the AI-use statement direct: he architects and debugs, AI writes much of the implementation.
 
-## 6. Banned (known AI tells — treat each as a build failure)
+## 6. Banned visual defaults (treat each as a build failure)
 
 **Fonts:** Inter, Roboto, Arial, system-default-as-design, Space Grotesk, Geist, Instrument Serif, and "one italic serif accent word in a sans headline".
 **Color:** purple/indigo/violet anywhere, any gradient, gradient text, glows, colored shadows, permanent dark mode with grey body text, barely-passing contrast.

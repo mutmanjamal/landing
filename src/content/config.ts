@@ -8,7 +8,6 @@ const projects = defineCollection({
     stack: z.array(z.string()),
     status: z.enum(['shipped', 'in progress']),
     role: z.string(),              // what Mutman decided/did
-    ai_note: z.string(),           // what AI wrote vs what he owned
     links: z.array(z.object({
       label: z.string(),
       url: z.string(),

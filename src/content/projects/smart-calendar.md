@@ -4,7 +4,6 @@ summary: Building a CLI tool that aggregates class schedules and deadlines from 
 stack: [Python, Flask]
 status: in progress
 role: Designed the data model, wrote the schedule parsing and CLI formatting, directed the overall tool structure.
-ai_note: AI writes the Flask route boilerplate. Schedule parsing and CLI output formatting I wrote myself. The AI kept introducing class hierarchies and abstractions the tool doesn't need.
 links: []
 media: []
 order: 4
