@@ -7,6 +7,7 @@ import '@fontsource/ibm-plex-sans/400.css';
 import '@fontsource/ibm-plex-sans/600.css';
 import '@fontsource/ibm-plex-mono/400.css';
 
+import siteSettings from '../data/site.json';
 import '../styles/tokens.css';
 import '../styles/reset.css';
 import '../styles/global.css';
@@ -74,6 +75,7 @@ const skip = lang === 'ar' ? 'تخطَّ إلى المحتوى' : 'Skip to conte
       })();
     </script>
 
+    <style is:inline set:html={`:root { --accent: ${siteSettings.accent}; --paper: ${siteSettings.background}; }`}></style>
     <slot name="head" />
   </head>
   <body>

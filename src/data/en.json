@@ -2,7 +2,11 @@
   "siteName": "Mutman Jamalaldin",
   "langLabel": "عربي",
   "skip": "Skip to content",
-  "nav": { "work": "Work", "stack": "Stack", "contact": "Contact" },
+  "nav": {
+    "work": "Work",
+    "stack": "Stack",
+    "contact": "Contact"
+  },
   "hero": {
     "name": "Mutman Jamalaldin",
     "line": "Computer science student in Kuala Lumpur. I build web and desktop tools for offline networks, existing hardware, and small budgets.",
@@ -13,7 +17,10 @@
   "work": {
     "heading": "Work",
     "readMore": "Read more →",
-    "status": { "shipped": "shipped", "in progress": "in progress" },
+    "status": {
+      "shipped": "shipped",
+      "in progress": "in progress"
+    },
     "summaries": {
       "sudan-pos": "Built a multi-device restaurant POS that syncs orders live over local WiFi with no internet dependency.",
       "homelab": "Set up and maintain a self-hosted Linux server running 8+ containerised services, managed over SSH from any device on my Tailscale network.",
@@ -47,5 +54,8 @@
     "back": "← Work",
     "myRole": "My role",
     "links": "Links"
+  },
+  "learning": {
+    "heading": "Side projects & learning"
   }
 }

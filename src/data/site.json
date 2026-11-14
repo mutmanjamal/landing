@@ -1,0 +1,26 @@
+{
+  "email": "mutmanhejaze@gmail.com",
+  "phone": "+60 11-6176 5456",
+  "location": "Kuala Lumpur, Malaysia",
+  "github": "https://github.com/mutmanjamal",
+  "title": "Mutman Jamalaldin, developer, Kuala Lumpur",
+  "description": "Computer science student building practical web and desktop software.",
+  "accent": "#0F6B3E",
+  "background": "#EFECE4",
+  "sections": {
+    "work": true,
+    "learning": true,
+    "stack": true,
+    "contact": true
+  },
+  "stack": {
+    "Languages": "JavaScript · Python · Bash · HTML · CSS · some SQL",
+    "Environments": "Node.js · Electron · Flask · Linux (Debian/Ubuntu)",
+    "Infrastructure": "Docker · Docker Compose · Tailscale · SSH · Nginx",
+    "Data": "SQLite · basic PostgreSQL",
+    "Tools": "Git · VS Code"
+  },
+  "title_ar": "مؤتمن جمال الدين — مطوّر برمجيات في كوالالمبور",
+  "description_ar": "أبني أدوات عملية للويب وسطح المكتب.",
+  "showCv": true
+}

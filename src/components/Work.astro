@@ -9,16 +9,17 @@ import { getCollection } from 'astro:content';
 import { ui, getLang } from '../i18n/ui';
 
 const allProjects = await getCollection('projects');
-const projects = allProjects.sort((a, b) => a.data.order - b.data.order);
+const { kind = 'project' } = Astro.props;
+const projects = allProjects.filter(p => p.data.visible && p.data.kind === kind).sort((a, b) => a.data.order - b.data.order);
 
 const lang = getLang(Astro.url.pathname);
 const t = ui[lang];
 const base = lang === 'ar' ? '/ar/' : '/';
 ---
 
-<section id="work" aria-labelledby="work-heading">
+<section id={kind === "learning" ? "learning" : "work"} aria-labelledby={`${kind}-heading`}>
   <div class="container work-header">
-    <h2 class="section-heading" id="work-heading">{t.work.heading}</h2>
+    <h2 class="section-heading" id={`${kind}-heading`}>{kind === "learning" ? t.learning.heading : t.work.heading}</h2>
   </div>
 
   {projects.map((project) => (
@@ -38,9 +39,9 @@ const base = lang === 'ar' ? '/ar/' : '/';
 
           <div class="project-body">
             <h3 class="project-title">
-              <a href={`${base}projects/${project.slug}`}>{project.data.title}</a>
+              <a href={`${base}projects/${project.slug}`}>{lang === "ar" && project.data.title_ar ? project.data.title_ar : project.data.title}</a>
             </h3>
-            <p class="project-summary">{t.work.summaries[project.slug] ?? project.data.summary}</p>
+            <p class="project-summary">{lang === "ar" ? (project.data.summary_ar || t.work.summaries[project.slug] || project.data.summary) : project.data.summary}</p>
             <a href={`${base}projects/${project.slug}`} class="project-link label">
               {t.work.readMore}
             </a>
@@ -55,7 +56,7 @@ const base = lang === 'ar' ? '/ar/' : '/';
 
 <style>
   /* ── Section ─────────────────────────────────────────────────── */
-  #work {
+  section {
     padding-block-start: var(--space-8);
   }
 
@@ -195,7 +196,7 @@ const base = lang === 'ar' ? '/ar/' : '/';
   }
 
   @media (max-width: 360px) {
-    #work {
+    section {
       padding-block-start: var(--space-6);
     }
     .project-row {

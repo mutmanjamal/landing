@@ -12,7 +12,7 @@ import { ui } from '../../../i18n/ui';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
-  return projects.map((project) => ({
+  return projects.filter(p => p.data.visible).map((project) => ({
     params: { slug: project.slug },
     props: { project },
   }));
@@ -20,10 +20,11 @@ export async function getStaticPaths() {
 
 const { project } = Astro.props;
 const { Content } = await project.render();
-const { title, summary, stack, status, role, links, media } = project.data;
+const { summary, stack, status, role, links, media } = project.data;
+const title = project.data.title_ar || project.data.title;
 const t = ui.ar;
 const statusAr = t.work.status[status];
-const summaryAr = t.work.summaries[project.slug] ?? summary;
+const summaryAr = project.data.summary_ar || t.work.summaries[project.slug] || summary;
 ---
 
 <Base

@@ -1,5 +1,6 @@
 ---
 // Contact.astro — §3: email as text, then links. No form (optional). Education in footer.
+import site from '../data/site.json';
 import { ui, getLang } from '../i18n/ui';
 
 const lang = getLang(Astro.url.pathname);
@@ -14,22 +15,22 @@ const t = ui[lang];
       {t.contact.line}
     </p>
     <address class="contact-address">
-      <a href="mailto:mutmanhejaze@gmail.com" class="contact-email" dir="ltr">
-        mutmanhejaze@gmail.com
+      <a href={`mailto:${site.email}`} class="contact-email" dir="ltr">
+        {site.email}
       </a>
-      <a href="/Mutman_CV.pdf" download class="cv-button label">{t.contact.downloadCv}</a>
+      {site.showCv && <a href="/Mutman_CV.pdf" download class="cv-button label">{t.contact.downloadCv}</a>}
       <ul class="contact-list label" role="list">
         <li>
           <span class="contact-label">{t.contact.phone}</span>
-          <a href="tel:+601161765456">+60 11-6176 5456</a>
+          <a href={`tel:${site.phone.replace(/[^+0-9]/g, "")}`}>{site.phone}</a>
         </li>
         <li>
           <span class="contact-label">{t.contact.location}</span>
-          <span>Kuala Lumpur, Malaysia</span>
+          <span>{site.location}</span>
         </li>
         <li>
           <span class="contact-label">{t.contact.github}</span>
-          <a href="https://github.com/mutmanjamal">github.com/mutmanjamal</a>
+          <a href={site.github}>{site.github.replace(/^https?:\/\//, "")}</a>
         </li>
       </ul>
     </address>

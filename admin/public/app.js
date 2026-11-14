@@ -1,399 +1,673 @@
-'use strict';
-
-const $ = (sel, root = document) => root.querySelector(sel);
-
-let state = null;
-let editingSlug = null; // null = creating a new project
-
-/* ───────────── helpers ───────────── */
-
-function toast(msg, bad = false) {
-  const el = $('#toast');
-  el.textContent = msg;
-  el.style.background = bad ? 'var(--danger)' : '';
-  el.classList.add('show');
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove('show'), 3000);
+"use strict";
+const $ = (s) => document.querySelector(s),
+  esc = (s) =>
+    String(s ?? "").replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
+let state,
+  view = "overview",
+  lang = "en",
+  section = "hero",
+  editing = null,
+  files = { images: [] },
+  dirty = false,
+  busy = false;
+const titles = {
+  visits: ["Visitor stats", "See recent visits to your website."],
+  overview: ["Overview", "Manage the work you share and how you present it."],
+  content: [
+    "Page content",
+    "Edit one section at a time, in English or Arabic.",
+  ],
+  projects: [
+    "Portfolio projects",
+    "Full case studies that show what you can build.",
+  ],
+  learning: [
+    "Side projects & learning",
+    "A home for experiments, small builds, and things you are learning.",
+  ],
+  files: [
+    "Media & CV",
+    "Keep your resume and project screenshots in one place.",
+  ],
+  settings: [
+    "Site settings",
+    "Control contact details, section visibility, colors, and technologies.",
+  ],
+  history: [
+    "Revision history",
+    "Restore an earlier draft. Your live website changes only when you publish.",
+  ],
+};
+const names = {
+  learning: "Learning section",
+  hero: "Introduction",
+  work: "Project labels",
+  stack: "Skills labels",
+  contact: "Contact",
+  footer: "Footer",
+  nav: "Navigation",
+  project: "Case study labels",
+  siteName: "Site name",
+  langLabel: "Language switch",
+  skip: "Skip link",
+  line: "Description",
+  intent: "Availability",
+  name: "Name",
+  downloadCv: "CV button",
+  seeWork: "Work link",
+  heading: "Heading",
+  readMore: "Case study link",
+  phone: "Phone label",
+  location: "Location label",
+  github: "GitHub label",
+  education: "Education",
+  built: "Footer credit",
+  back: "Back link",
+  myRole: "Role label",
+  links: "Links label",
+};
+function toast(message, error = false) {
+  $("#toast").textContent = message;
+  $("#toast").className = "show" + (error ? " error" : "");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => ($("#toast").className = ""), 5000);
 }
-
-async function api(url, opts) {
-  const res = await fetch(url, opts);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+async function api(url, options = {}) {
+  const response = await fetch("api/" + url, options);
+  const data = await response.json();
+  if (!response.ok) throw Error(data.error || "Request failed");
   return data;
 }
-
-function esc(s) {
-  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]));
+const json = (method, body) => ({
+  method,
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body),
+});
+function markDirty() {
+  dirty = true;
+  $("#save-state").textContent = "Unsaved changes";
+  $("#save-state").className = "dirty";
 }
-
-function flatten(obj, prefix = '', out = {}) {
-  for (const [k, v] of Object.entries(obj)) {
-    const key = prefix ? `${prefix}.${k}` : k;
-    if (v && typeof v === 'object' && !Array.isArray(v)) flatten(v, key, out);
+function saved() {
+  dirty = false;
+  $("#save-state").textContent = "Draft saved";
+  $("#save-state").className = "";
+  $("#build-state").textContent = "Ready to preview • live site unchanged";
+}
+function canLeave() {
+  return !dirty || confirm("Discard unsaved changes?");
+}
+window.addEventListener("beforeunload", (e) => {
+  if (dirty) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+function field(label, id, value, type = "text") {
+  return `<label>${esc(label)}<input id="${id}" type="${type}" value="${esc(value)}"></label>`;
+}
+async function refresh() {
+  state = await api("state");
+  files = await api("files");
+  $("#publish-button").disabled = state.previewOnly;
+  $("#publish-button").title = state.previewOnly
+    ? "Publishing is disabled in this review preview."
+    : "";
+  saved();
+  render();
+}
+function render() {
+  $("#mobile-nav").value=view;
+  const [title, description] = titles[view];
+  $("#page-heading").textContent = title;
+  $("#page-description").textContent = description;
+  document.querySelectorAll("[data-view]").forEach((b) => {
+    b.classList.toggle("active", b.dataset.view === view);
+    b.setAttribute("aria-current", b.dataset.view === view ? "page" : "false");
+  });
+  const functions = {
+    overview: overview,
+    content: content,
+    projects: projects,
+    learning: projects,
+    files: media,
+    settings: settings,
+    history: history,
+    visits: visits,
+  };
+  functions[view]();
+  $("#view")
+    .querySelectorAll("form input,form textarea,form select")
+    .forEach((el) => el.addEventListener("input", markDirty));
+}
+document.querySelectorAll("[data-view]").forEach(
+  (b) =>
+    (b.onclick = () => {
+      if (canLeave()) {
+        dirty = false;
+        view = b.dataset.view;
+        render();
+      }
+    }),
+);
+function overview() {
+  const full = state.projects.filter((p) => p.kind !== "learning"),
+    side = state.projects.filter((p) => p.kind === "learning");
+  $("#view").innerHTML =
+    `${state.previewOnly ? '<p class="notice">Review workspace: publishing is disabled. You can safely try the editors and build a preview.</p>' : ""}<div class="overview-grid"><div class="panel"><span>Portfolio projects</span><p class="metric">${full.length}</p><small>${full.filter((p) => p.visible).length} visible on the website</small></div><div class="panel"><span>Side projects & learning</span><p class="metric">${side.length}</p><small>Add experiments as your skills grow</small></div><div class="panel"><span>Media library</span><p class="metric">${files.images.length}</p><small>${files.cv ? "CV uploaded" : "No CV uploaded"}</small></div></div><div class="panel welcome"><div><p class="eyebrow">A clearer publishing flow</p><h2>Work on your website at your own pace.</h2><p>Save changes to your private draft, check the website preview, and publish when you are ready. Revision history keeps a copy before each edit.</p><button id="start-edit" class="primary">Edit introduction</button></div><ol class="steps"><li>Edit content or add a project</li><li>Save your draft</li><li>Build and review the preview</li><li>Publish the website</li></ol></div><div class="panel"><h3>Last preview build</h3><p>${state.build.last ? (state.build.last.ok ? "Built successfully" : "Build needs attention") + " • " + new Date(state.build.last.finished).toLocaleString() : "No preview built in this session."}</p>${state.build.last && !state.build.last.ok ? `<pre>${esc(state.build.last.log)}</pre>` : ""}</div>`;
+  $("#start-edit").onclick = () => {
+    view = "content";
+    section = "hero";
+    render();
+  };
+}
+function flatten(o, p = "", out = {}) {
+  for (const [k, v] of Object.entries(o)) {
+    const key = p ? p + "." + k : k;
+    if (v && typeof v === "object" && !Array.isArray(v)) flatten(v, key, out);
     else out[key] = v;
   }
   return out;
 }
-
-function unflatten(flat) {
-  const out = {};
-  for (const [key, value] of Object.entries(flat)) {
-    const parts = key.split('.');
-    let cur = out;
-    parts.forEach((p, i) => {
-      if (i === parts.length - 1) cur[p] = value;
-      else { cur[p] = cur[p] || {}; cur = cur[p]; }
-    });
-  }
-  return out;
-}
-
-function sectionTitle(key) {
-  const first = key.split('.')[0];
-  return first.charAt(0).toUpperCase() + first.slice(1);
-}
-
-function building() {
-  toast('Building & publishing…');
-}
-
-function buildResult(build) {
-  const last = build && build.last;
-  if (!last) return;
-  if (last.ok) toast('Published ✓');
-  else {
-    toast('Build failed — see log', true);
-    console.error(last.log);
-  }
-}
-
-/* ───────────── tabs ───────────── */
-
-document.querySelectorAll('.tabs button').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('active', b === btn));
-    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.id === 'tab-' + btn.dataset.tab));
-    if (btn.dataset.tab === 'stats') loadStats();
-  });
-});
-
-/* ───────────── sections ───────────── */
-
-function renderSections() {
-  const grid = $('#sections-grid');
-  const en = flatten(state.en);
-  const ar = flatten(state.ar);
-  const keys = [...new Set([...Object.keys(en), ...Object.keys(ar)])];
-
-  const groups = {};
-  for (const key of keys) {
-    const g = sectionTitle(key);
-    (groups[g] = groups[g] || []).push(key);
-  }
-
-  grid.innerHTML = Object.entries(groups).map(([group, groupKeys]) => `
-    <div class="panel">
-      <h3>${esc(group)} <span>· EN / AR</span></h3>
-      ${groupKeys.map((key) => {
-        const enVal = en[key] ?? '';
-        const arVal = ar[key] ?? '';
-        const isLong = String(enVal).length > 60 || String(arVal).length > 60;
-        const field = (lang, val) => isLong
-          ? `<div class="field"><label>${lang}</label><textarea rows="2" data-lang="${lang}" data-key="${esc(key)}" dir="${lang === 'ar' ? 'rtl' : 'ltr'}">${esc(val)}</textarea></div>`
-          : `<div class="field"><label>${lang}</label><input data-lang="${lang}" data-key="${esc(key)}" value="${esc(val)}" dir="${lang === 'ar' ? 'rtl' : 'ltr'}"></div>`;
-        return `
-          <div class="field"><label>${esc(key)}</label></div>
-          ${field('EN', enVal)}
-          ${field('AR', arVal)}`;
-      }).join('')}
-    </div>
-  `).join('');
-}
-
-$('#save-sections').addEventListener('click', async () => {
-  try {
-    const enFlat = {};
-    const arFlat = {};
-    document.querySelectorAll('#sections-grid [data-lang]').forEach((el) => {
-      const target = el.dataset.lang === 'EN' ? enFlat : arFlat;
-      target[el.dataset.key] = el.value;
-    });
-    building();
-    const res = await api('api/sections', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ en: unflatten(enFlat), ar: unflatten(arFlat) }),
-    });
-    buildResult(res.build);
-  } catch (e) {
-    toast(e.message, true);
-  }
-});
-
-/* ───────────── projects ───────────── */
-
-function renderProjects() {
-  const list = $('#project-list');
-  if (!state.projects.length) {
-    list.innerHTML = '<p class="hint">No projects yet.</p>';
-    return;
-  }
-  list.innerHTML = `
-    <div class="plist">
-      ${state.projects.map((p) => `
-        <div class="prow">
-          <span class="t">${esc(p.title)}</span>
-          <span class="m">${esc(p.slug)}</span>
-          <span class="m">${esc(p.status)}</span>
-          <span class="m">#${esc(p.order)}</span>
-          ${p.featured ? '<span class="m">featured</span>' : ''}
-          <span class="spacer"></span>
-          <button class="ghost" data-edit="${esc(p.slug)}">Edit</button>
-        </div>`).join('')}
-    </div>`;
-  list.querySelectorAll('[data-edit]').forEach((b) => {
-    b.addEventListener('click', () => openModal(state.projects.find((p) => p.slug === b.dataset.edit)));
+function setPath(o, key, value) {
+  const parts = key.split(".");
+  let cur = o;
+  parts.forEach((p, i) => {
+    if (i === parts.length - 1) cur[p] = value;
+    else cur = cur[p] ??= {};
   });
 }
-
-function openModal(project) {
-  editingSlug = project ? project.slug : null;
-  $('#modal-title').textContent = project ? `Edit: ${project.title}` : 'New project';
-  $('#p-slug').value = project ? project.slug : '';
-  $('#p-slug').disabled = Boolean(project);
-  $('#p-title').value = project ? project.title : '';
-  $('#p-summary').value = project ? project.summary : '';
-  $('#p-stack').value = project ? project.stack.join(', ') : '';
-  $('#p-status').value = project ? project.status : 'shipped';
-  $('#p-order').value = project ? project.order : state.projects.length + 1;
-  $('#p-featured').checked = project ? project.featured : false;
-  $('#p-role').value = project ? project.role : '';
-  $('#p-body').value = project ? project.body : '## Problem\n\n\n\n## What I built\n\n\n\n## Constraints\n';
-  $('#p-delete').hidden = !project;
-  $('#modal').hidden = false;
-}
-
-function closeModal() {
-  $('#modal').hidden = true;
-  editingSlug = null;
-}
-
-$('#new-project').addEventListener('click', () => openModal(null));
-$('#modal-close').addEventListener('click', closeModal);
-$('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
-
-$('#p-save').addEventListener('click', async () => {
-  const payload = {
-    slug: $('#p-slug').value.trim(),
-    title: $('#p-title').value,
-    summary: $('#p-summary').value,
-    stack: $('#p-stack').value.split(',').map((s) => s.trim()).filter(Boolean),
-    status: $('#p-status').value,
-    order: Number($('#p-order').value) || 1,
-    featured: $('#p-featured').checked,
-    role: $('#p-role').value,
-    body: $('#p-body').value,
+function content() {
+  const groups = Object.keys(state[lang]);
+  if (!groups.includes(section)) section = groups[0];
+  const data =
+    typeof state[lang][section] === "object"
+      ? flatten(state[lang][section])
+      : { value: state[lang][section] };
+  $("#view").innerHTML =
+    `<div class="language-tabs"><button data-lang="en" class="${lang === "en" ? "active" : ""}">English</button><button data-lang="ar" class="${lang === "ar" ? "active" : ""}">العربية</button></div><div class="content-layout"><nav class="section-nav" aria-label="Page sections">${groups.map((g) => `<button data-section="${g}" class="${g === section ? "active" : ""}">${esc(names[g] || g)}</button>`).join("")}</nav><form id="content-form" class="panel"><div class="section-line"><h2>${esc(names[section] || section)}</h2><button class="primary">Save draft</button></div><div class="fields" dir="${lang === "ar" ? "rtl" : "ltr"}">${Object.entries(
+      data,
+    )
+      .map(
+        ([key, value], i) =>
+          `<label for="text-${i}">${esc(
+            key
+              .split(".")
+              .map((k) => names[k] || k.replaceAll("-", " "))
+              .join(" / "),
+          )}<textarea id="text-${i}" data-key="${esc(key)}" rows="${String(value).length > 90 ? 3 : 2}">${esc(value)}</textarea></label>`,
+      )
+      .join("")}</div></form></div>`;
+  document.querySelectorAll("[data-lang]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        if (canLeave()) {
+          dirty = false;
+          lang = b.dataset.lang;
+          content();
+        }
+      }),
+  );
+  document.querySelectorAll("[data-section]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        if (canLeave()) {
+          dirty = false;
+          section = b.dataset.section;
+          content();
+        }
+      }),
+  );
+  $("#content-form").oninput = markDirty;
+  $("#content-form").onsubmit = async (e) => {
+    e.preventDefault();
+    const next = structuredClone(state[lang]);
+    document.querySelectorAll("[data-key]").forEach((el) => {
+      if (el.dataset.key === "value") next[section] = el.value;
+      else setPath(next[section], el.dataset.key, el.value);
+    });
+    try {
+      await api(
+        "sections",
+        json("PUT", {
+          en: lang === "en" ? next : state.en,
+          ar: lang === "ar" ? next : state.ar,
+        }),
+      );
+      state[lang] = next;
+      saved();
+      toast("Content saved to draft");
+    } catch (e) {
+      toast(e.message, true);
+    }
   };
+}
+function projects() {
+  const kind = view === "learning" ? "learning" : "project";
+  const items = state.projects.filter((p) => (p.kind || "project") === kind);
+  $("#view").innerHTML =
+    `<div class="toolbar"><input id="project-search" aria-label="Find a project" placeholder="Find a project…"><button id="new-project" class="primary">Add ${kind === "learning" ? "side project" : "project"}</button></div><div class="project-list">${items.length ? items.map((p) => `<article class="project-card" data-title="${esc(p.title.toLowerCase())}"><div><div class="meta"><span class="badge ${p.visible ? "" : "hidden"}">${p.visible ? "Visible" : "Hidden"}</span><span>${esc(p.status)}</span><span>Position ${p.order}</span>${p.featured ? "<span>Featured</span>" : ""}</div><h3>${esc(p.title)}</h3><p>${esc(p.summary)}</p><small>${esc(p.stack.join(", "))}</small></div><button data-edit="${esc(p.slug)}">Edit project</button></article>`).join("") : `<div class="empty"><h2>${kind === "learning" ? "Space for your next experiment" : "Add your first project"}</h2><p>Give it a title, explain what you built, and add a screenshot when you have one.</p></div>`}</div>`;
+  $("#new-project").onclick = () => openEditor(null, kind);
+  document.querySelectorAll("[data-edit]").forEach(
+    (b) =>
+      (b.onclick = () =>
+        openEditor(
+          state.projects.find((p) => p.slug === b.dataset.edit),
+          kind,
+        )),
+  );
+  $("#project-search").oninput = (e) =>
+    document
+      .querySelectorAll(".project-card")
+      .forEach(
+        (c) =>
+          (c.hidden = !c.dataset.title.includes(e.target.value.toLowerCase())),
+      );
+}
+function addLink(value = {}) {
+  const row = document.createElement("div");
+  row.className = "repeat-row";
+  row.innerHTML = `<label>Link label<input data-link-label value="${esc(value.label)}" placeholder="Source code"></label><label>URL<input data-link-url type="url" value="${esc(value.url)}" placeholder="https://…"></label><button type="button" aria-label="Remove link">Remove</button>`;
+  row.querySelector("button").onclick = () => {
+    row.remove();
+    markDirty();
+  };
+  $("#link-rows").append(row);
+}
+function addMedia(value = {}) {
+  const row = document.createElement("div");
+  row.className = "repeat-row";
+  row.innerHTML = `<label>Image<select data-media-src><option value="">Choose uploaded image</option>${files.images.map((i) => `<option value="${esc(i.url)}" ${value.src === i.url ? "selected" : ""}>${esc(i.name)}</option>`).join("")}${value.src && !files.images.some((i) => i.url === value.src) ? `<option selected value="${esc(value.src)}">${esc(value.src)}</option>` : ""}</select></label><label>Image description<input data-media-alt value="${esc(value.alt)}" placeholder="What does this image show?"></label><button type="button" aria-label="Remove image">Remove</button>`;
+  row.querySelector("button").onclick = () => {
+    row.remove();
+    markDirty();
+  };
+  $("#media-rows").append(row);
+}
+function openEditor(project, kind) {
+  editing = project?.slug || null;
+  const form = $("#project-form");
+  form.reset();
+  $("#editor-heading").textContent = project
+    ? "Edit " + project.title
+    : "New " + (kind === "learning" ? "side project" : "project");
+  for (const name of [
+    "title",
+    "title_ar",
+    "summary",
+    "summary_ar",
+    "role",
+    "body",
+    "status",
+    "order",
+    "kind",
+  ]) {
+    const el = form.elements[name];
+    el.value =
+      project?.[name] ??
+      (name === "kind"
+        ? kind
+        : name === "status"
+          ? "in progress"
+          : name === "order"
+            ? state.projects.length + 1
+            : "");
+  }
+  form.elements.slug.value = editing || "";
+  form.elements.slug.disabled = !!editing;
+  form.elements.stack.value = project?.stack.join(", ") || "";
+  form.elements.visible.checked = project?.visible !== false;
+  form.elements.featured.checked = !!project?.featured;
+  $("#delete-project").hidden = !editing;
+  $("#link-rows").innerHTML = "";
+  $("#media-rows").innerHTML = "";
+  (project?.links || []).forEach(addLink);
+  (project?.media || []).forEach(addMedia);
+  $("#project-dialog").showModal();
+}
+$("#add-link").onclick = () => {
+  addLink();
+  markDirty();
+};
+$("#add-media").onclick = () => {
+  addMedia();
+  markDirty();
+};
+$("#project-form").oninput = markDirty;
+function closeEditor() {
+  if (canLeave()) {
+    dirty = false;
+    $("#project-dialog").close();
+    saved();
+  }
+}
+$("#close-editor").onclick = closeEditor;
+$("#project-dialog").addEventListener("cancel", (e) => {
+  e.preventDefault();
+  closeEditor();
+});
+$("#project-form").onsubmit = async (e) => {
+  e.preventDefault();
+  const f = e.target,
+    p = {};
+  for (const k of [
+    "title",
+    "title_ar",
+    "summary",
+    "summary_ar",
+    "role",
+    "body",
+    "status",
+    "kind",
+  ])
+    p[k] = f.elements[k].value;
+  p.slug = f.elements.slug.value;
+  p.order = Number(f.elements.order.value) || 1;
+  p.visible = f.elements.visible.checked;
+  p.featured = f.elements.featured.checked;
+  p.stack = f.elements.stack.value
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+  p.links = [...document.querySelectorAll("#link-rows .repeat-row")]
+    .map((r) => ({
+      label: r.querySelector("[data-link-label]").value,
+      url: r.querySelector("[data-link-url]").value,
+    }))
+    .filter((l) => l.url);
+  p.media = [...document.querySelectorAll("#media-rows .repeat-row")]
+    .map((r) => ({
+      src: r.querySelector("[data-media-src]").value,
+      alt: r.querySelector("[data-media-alt]").value,
+    }))
+    .filter((m) => m.src);
   try {
-    building();
-    let res;
-    if (editingSlug) {
-      res = await api(`api/projects/${editingSlug}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-    } else {
-      res = await api('api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-    }
-    closeModal();
-    buildResult(res.build);
+    await api(
+      editing ? "projects/" + editing : "projects",
+      json(editing ? "PUT" : "POST", p),
+    );
+    $("#project-dialog").close();
     await refresh();
+    toast("Project saved to draft");
   } catch (e) {
     toast(e.message, true);
   }
-});
-
-$('#p-delete').addEventListener('click', async () => {
-  if (!editingSlug) return;
-  if (!confirm(`Delete project "${editingSlug}"?`)) return;
+};
+$("#delete-project").onclick = async () => {
+  if (
+    !editing ||
+    !confirm(
+      "Delete this project from the draft? You can restore it in Revision history.",
+    )
+  )
+    return;
   try {
-    building();
-    const res = await api(`api/projects/${editingSlug}`, { method: 'DELETE' });
-    closeModal();
-    buildResult(res.build);
+    await api("projects/" + editing, { method: "DELETE" });
+    $("#project-dialog").close();
     await refresh();
+    toast("Project removed from draft");
   } catch (e) {
     toast(e.message, true);
   }
-});
-
-/* ───────────── CV & images ───────────── */
-
-$('#cv-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const form = e.target;
-  try {
-    building();
-    const res = await api('api/cv', { method: 'POST', body: new FormData(form) });
-    buildResult(res.build);
-    form.reset();
-    await loadFiles();
-  } catch (err) {
-    toast(err.message, true);
-  }
-});
-
-$('#image-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const form = e.target;
-  try {
-    building();
-    const res = await api('api/image', { method: 'POST', body: new FormData(form) });
-    $('#image-out').textContent = `Uploaded: ${res.path}`;
-    toast('Image uploaded ✓');
-    form.reset();
-    await loadFiles();
-  } catch (err) {
-    toast(err.message, true);
-  }
-});
-
-/* ───────────── stats ───────────── */
-
-async function loadStats() {
-  const out = $('#stats-out');
-  out.innerHTML = '<p class="hint">Loading…</p>';
-  try {
-    const days = $('#stats-days').value;
-    const data = await api(`api/stats?days=${days}`);
-    if (!data.configured) {
-      out.innerHTML = `<p class="hint">GoatCounter token not set. Add <span class="mono">GOATCOUNTER_TOKEN=...</span> to <span class="mono">/etc/mutman-admin.env</span> and restart the service.</p>`;
-      return;
-    }
-    if (data.error) {
-      out.innerHTML = `<p class="hint">${esc(data.error)}</p>`;
-      return;
-    }
-    const total = sumCounts(data.total);
-    const hits = (data.hits && (data.hits.hits || data.hits)) || [];
-    out.innerHTML = `
-      <p class="big">${total.toLocaleString()}</p>
-      <p class="hint">page views in the last ${esc(data.days)} days</p>
-      ${Array.isArray(hits) && hits.length ? `
-        <table>
-          <thead><tr><th>Path</th><th>Title</th><th>Views</th></tr></thead>
-          <tbody>
-            ${hits.map((h) => `<tr>
-              <td class="mono">${esc(h.path || '')}</td>
-              <td>${esc(h.title || '')}</td>
-              <td>${esc(h.count ?? '')}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>` : ''}`;
-  } catch (e) {
-    out.innerHTML = `<p class="hint">${esc(e.message)}</p>`;
-  }
-}
-
-function sumCounts(total) {
-  if (!total) return 0;
-  if (typeof total.total === 'number') return total.total;
-  const arr = Array.isArray(total) ? total : Array.isArray(total.total) ? total.total : [];
-  return arr.reduce((sum, row) => sum + (Number(row && row.count) || 0), 0);
-}
-
-$('#stats-days').addEventListener('change', loadStats);
-
-/* ───────────── files (CV & images) ───────────── */
-
-function fmtSize(n) {
-  if (n == null) return '';
-  if (n < 1024) return `${n} B`;
-  if (n < 1048576) return `${(n / 1024).toFixed(1)} KB`;
-  return `${(n / 1048576).toFixed(1)} MB`;
-}
-
-function fmtDate(iso) {
-  return iso ? new Date(iso).toLocaleString() : '';
-}
-
-async function loadFiles() {
-  try {
-    const files = await api('api/files');
-    renderFiles(files);
-  } catch (e) {
-    /* the files tab may not be open; ignore */
-  }
-}
-
-function renderFiles(files) {
-  const cvEl = $('#cv-status');
-  if (files.cv) {
-    cvEl.innerHTML = `
-      <span class="mono">${esc(files.cv.name)}</span> — ${fmtSize(files.cv.size)}
-      · updated ${fmtDate(files.cv.modified)}
-      <a href="${esc(files.cv.url)}" target="_blank" rel="noopener" style="margin-inline-start:8px">open</a>
-      <button class="danger" id="del-cv" style="margin-inline-start:8px">Delete CV</button>`;
-    $('#del-cv').addEventListener('click', async () => {
-      if (!confirm('Delete the CV? The Download CV buttons will point to a missing file.')) return;
+};
+function media() {
+  const cv = files.cv;
+  $("#view").innerHTML =
+    `<section class="panel"><div class="section-line"><div><h2>Resume / CV</h2><p class="muted">${cv ? `${esc(cv.name)} • ${Math.round(cv.size / 1024)} KB` : "Upload your current resume as a PDF."}</p></div>${cv ? '<a href="assets/Mutman_CV.pdf" target="_blank" rel="noopener">View draft CV ↗</a>' : ""}</div><form id="cv-upload" class="upload-row"><input aria-label="Choose CV PDF" type="file" name="cv" accept="application/pdf" required><button class="primary">Save CV to draft</button></form></section><section class="panel"><h2>Image library</h2><p class="muted">Upload screenshots here, then attach them in a project’s image editor.</p><form id="image-upload" class="upload-row"><input aria-label="Choose image" type="file" name="image" accept="image/png,image/jpeg,image/webp" required><button class="primary">Upload image</button></form><div class="media-grid">${files.images.map((i) => `<article class="image-tile"><img src="assets${esc(i.url)}" alt="${esc(i.name)}"><p>${esc(i.name)}</p><button data-copy="${esc(i.url)}">Copy path</button> <button class="danger" data-delete-image="${esc(i.name)}">Delete</button></article>`).join("") || '<p class="muted">No images yet. Add a screenshot of something you built.</p>'}</div></section>`;
+  for (const [id, url] of [
+    ["cv-upload", "cv"],
+    ["image-upload", "image"],
+  ])
+    $("#" + id).onsubmit = async (e) => {
+      e.preventDefault();
       try {
-        building();
-        const res = await api('api/files/cv', { method: 'DELETE' });
-        buildResult(res.build);
-        await loadFiles();
-      } catch (err) {
-        toast(err.message, true);
+        await api(url, { method: "POST", body: new FormData(e.target) });
+        await refresh();
+        toast("File saved to draft");
+      } catch (e) {
+        toast(e.message, true);
       }
-    });
-  } else {
-    cvEl.innerHTML = '<span class="hint">No CV uploaded.</span>';
+    };
+  document.querySelectorAll("[data-copy]").forEach(
+    (b) =>
+      (b.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(b.dataset.copy);
+          toast("Image path copied");
+        } catch {
+          toast(b.dataset.copy);
+        }
+      }),
+  );
+  document.querySelectorAll("[data-delete-image]").forEach(
+    (b) =>
+      (b.onclick = async () => {
+        if (
+          !confirm(
+            "Remove this image from the draft library? Check that no projects use it first.",
+          )
+        )
+          return;
+        try {
+          await api(
+            "files/image/" + encodeURIComponent(b.dataset.deleteImage),
+            { method: "DELETE" },
+          );
+          await refresh();
+        } catch (e) {
+          toast(e.message, true);
+        }
+      }),
+  );
+}
+function settings() {
+  const s = state.settings;
+  $("#view").innerHTML =
+    `<form id="settings-form"><section class="panel"><div class="section-line"><h2>Contact & search appearance</h2><button class="primary">Save settings draft</button></div><div class="form-grid">${field("Email", "setting-email", s.email, "email")}${field("Phone", "setting-phone", s.phone)}${field("Location", "setting-location", s.location)}${field("GitHub URL", "setting-github", s.github, "url")}${field("Page title", "setting-title", s.title)}${field("Search description", "setting-description", s.description)}${field("Arabic page title", "setting-title_ar", s.title_ar)}${field("Arabic search description", "setting-description_ar", s.description_ar)}</div></section><section class="panel"><h2>Website sections</h2><p class="muted">Hide a section without deleting its content.</p><div class="checks"><label><input id="show-cv" type="checkbox" ${s.showCv !== false ? "checked" : ""}>Show CV download links</label>${Object.entries(
+      {
+        work: "Portfolio projects",
+        learning: "Side projects & learning",
+        stack: "Skills & technologies",
+        contact: "Contact",
+      },
+    )
+      .map(
+        ([k, label]) =>
+          `<label><input data-visible-section="${k}" type="checkbox" ${s.sections[k] ? "checked" : ""}>${label}</label>`,
+      )
+      .join(
+        "",
+      )}</div></section><section class="panel"><h2>Colors</h2><p class="muted">Check readability in the preview after changing colors.</p><div class="form-grid">${field("Accent color", "setting-accent", s.accent, "color")}${field("Page background", "setting-background", s.background, "color")}</div></section><section class="panel"><h2>Skills & technologies</h2><div class="fields">${Object.entries(
+      s.stack,
+    )
+      .map(
+        ([k, v]) =>
+          `<label>${esc(k)}<input data-stack="${k}" value="${esc(v)}"></label>`,
+      )
+      .join(
+        "",
+      )}</div></section><button class="primary">Save settings draft</button></form>`;
+  $("#settings-form").onsubmit = async (e) => {
+    e.preventDefault();
+    const next = structuredClone(s);
+    for (const k of [
+      "email",
+      "phone",
+      "location",
+      "github",
+      "title",
+      "description",
+      "title_ar",
+      "description_ar",
+      "accent",
+      "background",
+    ])
+      next[k] = $("#setting-" + k).value;
+    next.showCv = $("#show-cv").checked;
+    document
+      .querySelectorAll("[data-visible-section]")
+      .forEach((i) => (next.sections[i.dataset.visibleSection] = i.checked));
+    document
+      .querySelectorAll("[data-stack]")
+      .forEach((i) => (next.stack[i.dataset.stack] = i.value));
+    try {
+      await api("settings", json("PUT", next));
+      state.settings = next;
+      saved();
+      toast("Settings saved to draft");
+    } catch (e) {
+      toast(e.message, true);
+    }
+  };
+}
+async function history() {
+  const el = $("#view");
+  el.innerHTML = "<p>Loading revisions…</p>";
+  try {
+    const revisions = await api("revisions");
+    if (view !== "history") return;
+    el.innerHTML = `<section class="panel"><h2>Saved checkpoints</h2><p class="muted">A checkpoint is made before each saved change. Restoring creates another checkpoint first.</p>${revisions.map((r) => `<div class="revision"><div><strong>${esc(r.label.replace(/^PUT \/api\/sections$/, "Page content").replace(/^PUT \/api\/settings$/, "Site settings"))}</strong><p>${esc(new Date(r.created).toLocaleString())}</p></div><button data-restore="${r.id}">Restore draft</button></div>`).join("") || "<p>No revisions yet. Save an edit to create the first checkpoint.</p>"}</section>`;
+    document.querySelectorAll("[data-restore]").forEach(
+      (b) =>
+        (b.onclick = async () => {
+          if (
+            !confirm(
+              "Restore this checkpoint to the draft? The current draft will be saved first.",
+            )
+          )
+            return;
+          try {
+            await api("revisions/" + b.dataset.restore + "/restore", {
+              method: "POST",
+            });
+            await refresh();
+            toast("Earlier draft restored");
+          } catch (e) {
+            toast(e.message, true);
+          }
+        }),
+    );
+  } catch (e) {
+    el.innerHTML = `<p class="error-panel">${esc(e.message)}</p>`;
   }
-
-  const list = $('#images-list');
-  if (!files.images.length) {
-    list.innerHTML = '<p class="hint">No images yet.</p>';
+}
+async function buildPreview() {
+  if (dirty) {
+    toast("Save your changes before building a preview.", true);
     return;
   }
-  list.innerHTML = `
-    <div class="plist">
-      ${files.images.map((img) => `
-        <div class="prow">
-          <a class="mono" href="${esc(img.url)}" target="_blank" rel="noopener">${esc(img.url)}</a>
-          <span class="m">${fmtSize(img.size)}</span>
-          <span class="spacer"></span>
-          <button class="danger" data-del-img="${esc(img.name)}">Delete</button>
-        </div>`).join('')}
-    </div>`;
-  list.querySelectorAll('[data-del-img]').forEach((b) => {
-    b.addEventListener('click', async () => {
-      if (!confirm(`Delete ${b.dataset.delImg}?`)) return;
-      try {
-        building();
-        const res = await api('api/files/image/' + encodeURIComponent(b.dataset.delImg), { method: 'DELETE' });
-        buildResult(res.build);
-        await loadFiles();
-      } catch (err) {
-        toast(err.message, true);
+  if (busy) return;
+  busy = true;
+  $("#preview-button").disabled = true;
+  $("#build-state").textContent = "Building draft preview…";
+  try {
+    const result = await api("preview", { method: "POST" });
+    state.build = result.build;
+    if (!result.ok)
+      throw Error(
+        "Preview build failed. Open Overview to inspect the build log.",
+      );
+    $("#preview-frame").src = "preview/?v=" + Date.now();
+    $("#preview-dialog").showModal();
+    $("#build-state").textContent = "Preview ready";
+    toast("Draft preview is ready");
+  } catch (e) {
+    toast(e.message, true);
+    $("#build-state").textContent = "Preview build needs attention";
+  } finally {
+    busy = false;
+    $("#preview-button").disabled = false;
+  }
+}
+$("#preview-button").onclick = buildPreview;
+$("#close-preview").onclick = () => $("#preview-dialog").close();
+$("#preview-en").onclick = () => ($("#preview-frame").src = "preview/");
+$("#preview-ar").onclick = () => ($("#preview-frame").src = "preview/ar/");
+$("#preview-mobile").onclick = () =>
+  $("#preview-frame").classList.toggle("phone");
+$("#publish-button").onclick = async () => {
+  if (dirty) return toast("Save your changes before publishing.", true);
+  if (!confirm("Publish the saved draft to the live website?")) return;
+  $("#publish-button").disabled = true;
+  try {
+    await api("publish", { method: "POST" });
+    toast("Website published");
+    $("#build-state").textContent = "Published just now";
+  } catch (e) {
+    toast(e.message, true);
+  } finally {
+    $("#publish-button").disabled = state.previewOnly;
+  }
+};
+refresh().catch((e) => {
+  $("#save-state").textContent = "Unable to load workspace";
+  $("#view").innerHTML =
+    `<div class="error-panel">${esc(e.message)}. Refresh to retry.</div>`;
+});
+async function visits() {
+  const out = $("#view");
+  out.innerHTML =
+    '<section class="panel"><div class="section-line"><h2>Website visits</h2><select id="stats-days" aria-label="Date range"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select></div><div id="visit-details">Loading…</div></section>';
+  async function load() {
+    const target = $("#visit-details");
+    try {
+      const data = await api("stats?days=" + $("#stats-days").value);
+      if (view !== "visits") return;
+      if (!data.configured) {
+        target.innerHTML =
+          '<p class="muted">Visitor analytics is not connected in this workspace.</p>';
+        return;
       }
-    });
-  });
+      if (data.error) {
+        target.textContent = data.error;
+        return;
+      }
+      const rows = Array.isArray(data.total)
+        ? data.total
+        : Array.isArray(data.total?.total)
+          ? data.total.total
+          : [];
+      const total =
+        typeof data.total?.total === "number"
+          ? data.total.total
+          : rows.reduce((sum, row) => sum + (Number(row.count) || 0), 0);
+      const hits = Array.isArray(data.hits?.hits)
+        ? data.hits.hits
+        : Array.isArray(data.hits)
+          ? data.hits
+          : [];
+      target.innerHTML =
+        '<p class="metric">' +
+        total.toLocaleString() +
+        '</p><p class="muted">Page views in the selected period</p>' +
+        hits
+          .map(
+            (h) =>
+              '<div class="revision"><div><strong>' +
+              esc(h.title || h.path) +
+              "</strong><p>" +
+              esc(h.path) +
+              "</p></div><span>" +
+              esc(h.count) +
+              "</span></div>",
+          )
+          .join("");
+    } catch (e) {
+      target.textContent = e.message;
+    }
+  }
+  $("#stats-days").onchange = load;
+  await load();
 }
 
-/* ───────────── boot ───────────── */
-
-async function refresh() {
-  state = await api('api/state');
-  renderSections();
-  renderProjects();
-  await loadFiles();
-}
-
-refresh().catch((e) => toast(`Failed to load: ${e.message}`, true));
+$("#mobile-nav").onchange = event => { if(canLeave()){dirty=false;view=event.target.value;render();}else event.target.value=view; };

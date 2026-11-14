@@ -3,6 +3,7 @@ title: Smart Calendar
 summary: Building a CLI tool that aggregates class schedules and deadlines from multiple sources into one place, with a Flask web interface for phone input.
 stack: [Python, Flask]
 status: in progress
+kind: learning
 role: Designed the data model, wrote the schedule parsing and CLI formatting, directed the overall tool structure.
 links: []
 media: []

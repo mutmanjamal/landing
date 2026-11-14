@@ -1,5 +1,6 @@
 ---
 // index.astro — single-page portfolio
+import site from '../data/site.json';
 import Base from '../layouts/Base.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
@@ -10,15 +11,16 @@ import Footer from '../components/Footer.astro';
 ---
 
 <Base
-  title="Mutman Jamalaldin, developer, Kuala Lumpur"
-  description="Computer science student in Kuala Lumpur. I build web and desktop software. Open to remote work in web development, tech support, and more."
+  title={site.title}
+  description={site.description}
 >
   <main id="main">
     <Header />
     <Hero />
-    <Work />
-    <Stack />
-    <Contact />
+    {site.sections.work && <Work />}
+    {site.sections.learning && <Work kind="learning" />}
+    {site.sections.stack && <Stack />}
+    {site.sections.contact && <Contact />}
   </main>
   <Footer />
 </Base>

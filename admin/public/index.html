@@ -1,102 +1,181 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>mutman.tech — admin</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <header class="top">
-    <div class="brand"><strong>mutman.tech</strong> <span class="tag">admin</span></div>
-    <nav class="tabs">
-      <button data-tab="sections" class="active">Sections</button>
-      <button data-tab="projects">Projects</button>
-      <button data-tab="files">CV &amp; images</button>
-      <button data-tab="stats">Stats</button>
-    </nav>
-  </header>
-
-  <main>
-    <section id="tab-sections" class="tab active">
-      <div class="bar">
-        <h2>Site text</h2>
-        <button id="save-sections" class="primary">Save &amp; publish</button>
-      </div>
-      <p class="hint">Every string on the site. Saving rebuilds the site and publishes it.</p>
-      <div id="sections-grid" class="grid2"></div>
-    </section>
-
-    <section id="tab-projects" class="tab">
-      <div class="bar">
-        <h2>Projects</h2>
-        <button id="new-project" class="primary">+ New project</button>
-      </div>
-      <div id="project-list"></div>
-    </section>
-
-    <section id="tab-files" class="tab">
-      <h2>CV</h2>
-      <p class="hint">Upload a PDF to replace <span class="mono">/Mutman_CV.pdf</span>.</p>
-      <form id="cv-form" class="row">
-        <input type="file" name="cv" accept="application/pdf" required>
-        <button class="primary">Upload CV</button>
-      </form>
-      <div id="cv-status" class="hint"></div>
-
-      <h2>Images</h2>
-      <p class="hint">Upload screenshots for project pages. The URL path is shown after upload.</p>
-      <form id="image-form" class="row">
-        <input type="file" name="image" accept="image/png,image/jpeg,image/webp,image/svg+xml" required>
-        <button class="primary">Upload image</button>
-      </form>
-      <p id="image-out" class="mono"></p>
-      <div id="images-list"></div>
-    </section>
-
-    <section id="tab-stats" class="tab">
-      <div class="bar">
-        <h2>Visits</h2>
-        <select id="stats-days">
-          <option value="7">7 days</option>
-          <option value="30" selected>30 days</option>
-          <option value="90">90 days</option>
-        </select>
-      </div>
-      <div id="stats-out"></div>
-    </section>
-  </main>
-
-  <div id="toast" class="toast"></div>
-
-  <div id="modal" class="modal" hidden>
-    <div class="modal-card">
-      <div class="bar">
-        <h2 id="modal-title">Project</h2>
-        <button id="modal-close" class="ghost">×</button>
-      </div>
-      <div class="form-grid">
-        <label>Slug<input id="p-slug" placeholder="my-project"></label>
-        <label>Title<input id="p-title"></label>
-        <label class="full">Summary<textarea id="p-summary" rows="2"></textarea></label>
-        <label>Stack (comma separated)<input id="p-stack" placeholder="Astro, CSS"></label>
-        <label>Status<select id="p-status">
-          <option value="shipped">shipped</option>
-          <option value="in progress">in progress</option>
-        </select></label>
-        <label>Order<input id="p-order" type="number" min="1" value="1"></label>
-        <label class="check"><input id="p-featured" type="checkbox"> Featured</label>
-        <label class="full">My role<textarea id="p-role" rows="2"></textarea></label>
-        <label class="full">Body (Markdown)<textarea id="p-body" rows="10"></textarea></label>
-      </div>
-      <div class="bar">
-        <button id="p-delete" class="danger">Delete</button>
-        <span class="spacer"></span>
-        <button id="p-save" class="primary">Save &amp; publish</button>
-      </div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mutman • Site studio</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="#">Mutman<span>Site studio</span></a>
+      <p class="nav-label">Workspace</p>
+      <nav aria-label="Admin navigation">
+        <button data-view="overview" class="active">Overview</button
+        ><button data-view="content">Page content</button
+        ><button data-view="projects">Portfolio projects</button
+        ><button data-view="learning">Side projects & learning</button
+        ><button data-view="files">Media & CV</button
+        ><button data-view="settings">Site settings</button
+        ><button data-view="history">Revision history</button
+        ><button data-view="visits">Visitor stats</button>
+      </nav>
+      <select id="mobile-nav" aria-label="Choose admin page"><option value="overview">Overview</option><option value="content">Page content</option><option value="projects">Portfolio projects</option><option value="learning">Side projects &amp; learning</option><option value="files">Media &amp; CV</option><option value="settings">Site settings</option><option value="history">Revision history</option><option value="visits">Visitor stats</option></select>
+      <a
+        class="live-link"
+        href="https://mutman.tech"
+        target="_blank"
+        rel="noopener"
+        >Open live website ↗</a
+      >
+      <p class="sidebar-note">Your edits stay in drafts until you publish.</p>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <div>
+          <span id="save-state" role="status">Loading workspace…</span
+          ><small id="build-state">Draft workspace</small>
+        </div>
+        <div class="actions">
+          <button id="preview-button">Build preview</button
+          ><button id="publish-button" class="primary">Publish website</button>
+        </div>
+      </header>
+      <main id="main">
+        <div class="page-title">
+          <div>
+            <p class="eyebrow">Your website, in your hands</p>
+            <h1 id="page-heading">Overview</h1>
+            <p id="page-description">
+              Manage the work you share and how you present it.
+            </p>
+          </div>
+        </div>
+        <div id="view"></div>
+      </main>
     </div>
-  </div>
-
-  <script src="app.js"></script>
-</body>
+    <dialog id="project-dialog">
+      <form id="project-form">
+        <header class="dialog-head">
+          <div>
+            <p class="eyebrow">Project editor</p>
+            <h2 id="editor-heading">New project</h2>
+          </div>
+          <button
+            type="button"
+            id="close-editor"
+            aria-label="Close project editor"
+          >
+            Close
+          </button>
+        </header>
+        <div class="form-grid">
+          <label>Title<input name="title" required maxlength="160" /></label
+          ><label
+            >Arabic title <small>Optional</small
+            ><input name="title_ar" dir="rtl" /></label
+          ><label
+            >URL name<input
+              name="slug"
+              required
+              pattern="[a-z0-9][a-z0-9\-]*"
+            /><small>Lowercase words separated by hyphens.</small></label
+          ><label
+            >Collection<select name="kind">
+              <option value="project">Portfolio project</option>
+              <option value="learning">Side project / learning</option>
+            </select></label
+          ><label class="full"
+            >Summary<textarea
+              name="summary"
+              rows="2"
+              required
+            ></textarea></label
+          ><label class="full"
+            >Arabic summary <small>Optional</small
+            ><textarea name="summary_ar" rows="2" dir="rtl"></textarea></label
+          ><label
+            >Technologies<input
+              name="stack"
+              placeholder="Python, Flask"
+            /><small>Separate tools with commas.</small></label
+          ><label
+            >Status<select name="status">
+              <option value="shipped">Completed / shipped</option>
+              <option value="in progress">In progress</option>
+            </select></label
+          ><label
+            >Display position<input
+              name="order"
+              type="number"
+              min="1"
+              value="1"
+          /></label>
+          <div class="checks">
+            <label
+              ><input name="visible" type="checkbox" checked /> Visible on
+              website</label
+            ><label
+              ><input name="featured" type="checkbox" /> Featured project</label
+            >
+          </div>
+          <label class="full"
+            >Your role<textarea name="role" rows="2"></textarea></label
+          ><label class="full"
+            >Project story <small>Markdown</small
+            ><textarea
+              name="body"
+              rows="9"
+              placeholder="## Problem&#10;&#10;## What I built&#10;&#10;## Constraints"
+            ></textarea>
+          </label>
+          <section class="full repeat-section">
+            <div class="section-line">
+              <h3>Evidence &amp; links</h3>
+              <button type="button" id="add-link">Add link</button>
+            </div>
+            <div id="link-rows"></div>
+          </section>
+          <section class="full repeat-section">
+            <div class="section-line">
+              <h3>Screenshots & images</h3>
+              <button type="button" id="add-media">Add image</button>
+            </div>
+            <p class="muted">
+              Screenshots are optional. Return to this project whenever you have evidence: upload images in Media &amp; CV, then attach them here with a description.
+            </p>
+            <div id="media-rows"></div>
+          </section>
+        </div>
+        <footer class="dialog-foot">
+          <button id="delete-project" type="button" class="danger">
+            Delete project</button
+          ><span class="spacer"></span
+          ><button class="primary" type="submit">Save draft</button>
+        </footer>
+      </form>
+    </dialog>
+    <dialog id="preview-dialog">
+      <header class="dialog-head">
+        <div>
+          <h2>Website preview</h2>
+          <p class="muted">Built from your saved draft.</p>
+        </div>
+        <div class="actions">
+          <button id="preview-en">English</button
+          ><button id="preview-ar">العربية</button
+          ><button id="preview-mobile">Phone width</button
+          ><button id="close-preview">Close</button>
+        </div>
+      </header>
+      <iframe
+        id="preview-frame"
+        title="Draft website preview"
+        sandbox="allow-same-origin allow-downloads allow-popups"
+      ></iframe>
+    </dialog>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
 </html>

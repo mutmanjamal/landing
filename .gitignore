@@ -4,3 +4,9 @@ dist/
 .env
 .env.*
 .DS_Store
+
+.admin-data/
+output/
+.playwright-cli/
+
+node_modules

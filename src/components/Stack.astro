@@ -1,5 +1,6 @@
 ---
 // Stack.astro — §3: grouped list of tools, no skill bars, no percentages, no logo walls.
+import site from '../data/site.json';
 import { ui, getLang } from '../i18n/ui';
 
 const lang = getLang(Astro.url.pathname);
@@ -13,23 +14,23 @@ const t = ui[lang];
     <dl class="stack-list">
       <div class="stack-group">
         <dt class="label">{t.stack.groups.languages}</dt>
-        <dd>JavaScript · Python · Bash · HTML · CSS · some SQL</dd>
+        <dd>{site.stack.Languages}</dd>
       </div>
       <div class="stack-group">
         <dt class="label">{t.stack.groups.environments}</dt>
-        <dd>Node.js · Electron · Flask · Linux (Debian/Ubuntu)</dd>
+        <dd>{site.stack.Environments}</dd>
       </div>
       <div class="stack-group">
         <dt class="label">{t.stack.groups.infrastructure}</dt>
-        <dd>Docker · Docker Compose · Tailscale · SSH · Nginx</dd>
+        <dd>{site.stack.Infrastructure}</dd>
       </div>
       <div class="stack-group">
         <dt class="label">{t.stack.groups.data}</dt>
-        <dd>SQLite · basic PostgreSQL</dd>
+        <dd>{site.stack.Data}</dd>
       </div>
       <div class="stack-group">
         <dt class="label">{t.stack.groups.tools}</dt>
-        <dd>Git · VS Code</dd>
+        <dd>{site.stack.Tools}</dd>
       </div>
     </dl>
 

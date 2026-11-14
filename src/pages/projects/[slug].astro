@@ -9,7 +9,7 @@ import Footer from '../../components/Footer.astro';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
-  return projects.map((project) => ({
+  return projects.filter(p => p.data.visible).map((project) => ({
     params: { slug: project.slug },
     props: { project },
   }));
