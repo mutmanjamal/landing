@@ -36,3 +36,11 @@ Draft templates refresh on startup without overwriting saved content. On a first
 ## Verification
 
 `node admin/test.mjs` starts an isolated temporary site and checks saving, project creation, learning collections, image attachment, link preservation, visibility, preview isolation, settings, publication, deletion, revision restore, and the review publication block. It never uses the production publish directory.
+
+## Visitors and health
+
+Open **Visitor stats**, then enter a GoatCounter site code and a token with only **Read statistics** permission. The server verifies the token before storing it in `integrations.json` alongside the draft directory, with file mode 0600. It is never returned to the browser, copied into published files, committed, or included in content revisions. Existing `GOATCOUNTER_TOKEN` and `GOATCOUNTER_URL` environment settings remain supported when no connection file exists.
+
+The **Website & server health** page checks the public HTTPS response and certificate expiry, server memory/swap/disk, service status, and public GitHub Actions results. Results are cached to keep overhead low. These checks run on the VM and do not provide independent outage alerts if the VM itself is down. GitHub Actions results are explicitly separate from Azure website publication.
+
+`node admin/test-monitoring.mjs` tests the integration with mock provider responses and synthetic credentials. It never contacts GoatCounter or writes a real token.

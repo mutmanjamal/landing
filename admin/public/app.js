@@ -21,6 +21,10 @@ let state,
   dirty = false,
   busy = false;
 const titles = {
+  health: [
+    "Website & server health",
+    "Check website availability, memory, disk space, and build status.",
+  ],
   visits: ["Visitor stats", "See recent visits to your website."],
   overview: ["Overview", "Manage the work you share and how you present it."],
   content: [
@@ -127,7 +131,7 @@ async function refresh() {
   render();
 }
 function render() {
-  $("#mobile-nav").value=view;
+  $("#mobile-nav").value = view;
   const [title, description] = titles[view];
   $("#page-heading").textContent = title;
   $("#page-description").textContent = description;
@@ -144,6 +148,7 @@ function render() {
     settings: settings,
     history: history,
     visits: visits,
+    health: health,
   };
   functions[view]();
   $("#view")
@@ -617,57 +622,110 @@ refresh().catch((e) => {
 async function visits() {
   const out = $("#view");
   out.innerHTML =
-    '<section class="panel"><div class="section-line"><h2>Website visits</h2><select id="stats-days" aria-label="Date range"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select></div><div id="visit-details">Loading…</div></section>';
-  async function load() {
-    const target = $("#visit-details");
-    try {
-      const data = await api("stats?days=" + $("#stats-days").value);
-      if (view !== "visits") return;
-      if (!data.configured) {
+    '<section id="connection-card" class="panel">Checking GoatCounter connection…</section><section class="panel"><div class="section-line"><h2>Visitors</h2><select id="stats-days" aria-label="Visitor date range"><option value="1">Today (UTC)</option><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select></div><div id="visit-details">Loading…</div></section>';
+  try {
+    const connections = await api("integrations");
+    if (view !== "visits") return;
+    const connected = connections.goatcounter.configured;
+    const code = new URL(connections.goatcounter.url).hostname.split(".")[0];
+    $("#connection-card").innerHTML =
+      `<div class="section-line"><div><h2>GoatCounter</h2><p class="muted">${connected ? "A token is configured. Visitor data is fetched securely by your server." : "Connect a read-only token to show your visitor statistics here."}</p></div><a href="${esc(connections.goatcounter.url)}" target="_blank" rel="noopener">Open GoatCounter ↗</a></div><details ${connected ? "" : "open"}><summary>${connected ? "Update connection" : "Connect visitor statistics"}</summary><p class="muted">In your GoatCounter account, open your user menu → API and create a token with <strong>Read statistics</strong>. Enter it below. It stays on the server and is never included in website files or draft backups.</p><form id="goat-connect" class="form-grid"><label>GoatCounter site code<input id="goat-site" value="${esc(code)}" required autocomplete="off"></label><label>Read-statistics API token<input id="goat-token" type="password" required autocomplete="off" minlength="12"></label><div class="full"><button class="primary">Verify & connect</button><p id="connection-result" role="status" class="muted"></p></div></form></details>`;
+    $("#goat-connect").onsubmit = async (event) => {
+      event.preventDefault();
+      const button = event.target.querySelector("button");
+      button.disabled = true;
+      $("#connection-result").textContent = "Verifying your token…";
+      try {
+        await api(
+          "integrations/goatcounter",
+          json("POST", {
+            site: $("#goat-site").value,
+            token: $("#goat-token").value,
+          }),
+        );
+        $("#goat-token").value = "";
+        toast("GoatCounter connected");
+        await visits();
+      } catch (error) {
+        $("#connection-result").textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    };
+    async function load() {
+      const target = $("#visit-details");
+      target.textContent = "Loading visitor statistics…";
+      try {
+        const data = await api("stats?days=" + $("#stats-days").value);
+        if (view !== "visits") return;
+        if (!data.configured) {
+          target.innerHTML =
+            '<p class="muted">Complete the connection above to load your visitor numbers. The tracking script is already on your website.</p>';
+          return;
+        }
+        const max = Math.max(1, ...data.daily.map((row) => row.visitors));
+        target.innerHTML = `<div class="overview-grid"><div><p class="muted">Visitors in this period</p><p class="metric">${Number(data.visitors).toLocaleString()}</p></div><div><p class="muted">Tracked events</p><p class="metric">${Number(data.events).toLocaleString()}</p></div><div><p class="muted">Date range (UTC)</p><p>${esc(data.start)} – ${esc(data.end)}</p><small>Updated ${esc(new Date(data.checkedAt).toLocaleTimeString())}</small></div></div><p class="muted">Period statistics, not a count of people online right now. A visitor can appear on more than one page.</p><h3>Daily activity</h3><div class="activity-chart">${data.daily.map((row) => `<div class="activity-row"><time>${esc(row.day)}</time><meter min="0" max="${max}" value="${row.visitors}" aria-label="${esc(row.day)} visitors">${row.visitors}</meter><span>${row.visitors}</span></div>`).join("") || '<p class="muted">No activity recorded in this date range.</p>'}</div><h3>Most visited pages</h3>${data.pages.map((row) => `<div class="revision"><div><strong>${esc(row.title || row.path)}</strong><p>${esc(row.path)}</p></div><span>${row.visitors.toLocaleString()} visitors</span></div>`).join("") || '<p class="muted">No page visits recorded yet.</p>'}${data.morePages ? '<p class="muted">Showing the first 15 pages. Open GoatCounter for the full report.</p>' : ""}`;
+      } catch (error) {
         target.innerHTML =
-          '<p class="muted">Visitor analytics is not connected in this workspace.</p>';
-        return;
+          '<p class="error-panel">' + esc(error.message) + "</p>";
       }
-      if (data.error) {
-        target.textContent = data.error;
-        return;
-      }
-      const rows = Array.isArray(data.total)
-        ? data.total
-        : Array.isArray(data.total?.total)
-          ? data.total.total
-          : [];
-      const total =
-        typeof data.total?.total === "number"
-          ? data.total.total
-          : rows.reduce((sum, row) => sum + (Number(row.count) || 0), 0);
-      const hits = Array.isArray(data.hits?.hits)
-        ? data.hits.hits
-        : Array.isArray(data.hits)
-          ? data.hits
-          : [];
-      target.innerHTML =
-        '<p class="metric">' +
-        total.toLocaleString() +
-        '</p><p class="muted">Page views in the selected period</p>' +
-        hits
-          .map(
-            (h) =>
-              '<div class="revision"><div><strong>' +
-              esc(h.title || h.path) +
-              "</strong><p>" +
-              esc(h.path) +
-              "</p></div><span>" +
-              esc(h.count) +
-              "</span></div>",
-          )
-          .join("");
-    } catch (e) {
-      target.textContent = e.message;
     }
+    $("#stats-days").onchange = load;
+    await load();
+  } catch (error) {
+    if (view === "visits")
+      out.innerHTML = '<p class="error-panel">' + esc(error.message) + "</p>";
   }
-  $("#stats-days").onchange = load;
-  await load();
+}
+function bytes(value) {
+  return Number.isFinite(value)
+    ? (value / 1024 / 1024 / 1024).toFixed(2) + " GB"
+    : "Unavailable";
+}
+async function health() {
+  const out = $("#view");
+  out.innerHTML =
+    '<div class="toolbar"><button id="refresh-health">Refresh checks</button><span class="muted">Checks are cached briefly to keep the server light.</span></div><div id="health-cards">Checking website and server…</div><section id="github-status" class="panel">Checking GitHub builds…</section>';
+  $("#refresh-health").onclick = health;
+  const checks = await Promise.allSettled([
+    api("health"),
+    api("github-status"),
+  ]);
+  if (view !== "health") return;
+  if (checks[0].status === "fulfilled") {
+    const d = checks[0].value,
+      m = d.server.memory,
+      disk = d.server.disk,
+      expiry = d.website.tlsExpires ? new Date(d.website.tlsExpires) : null;
+    $("#health-cards").innerHTML =
+      `<p class="notice">${esc(d.scope)}</p><div class="overview-grid"><section class="panel"><h2>Website ${d.website.ok ? "responding" : "needs attention"}</h2><p class="metric">${d.website.status ? "HTTP " + d.website.status : "Unavailable"}</p><p class="muted">${d.website.error ? esc(d.website.error) : d.website.responseMs + " ms response time"}</p><small>${expiry ? "HTTPS certificate expires " + esc(expiry.toLocaleDateString()) : "Certificate information unavailable"}</small></section><section class="panel"><h2>RAM & virtual memory</h2><p>${bytes(m.MemAvailable)} RAM available of ${bytes(m.MemTotal)}</p><p>${bytes((m.SwapTotal || 0) - (m.SwapFree || 0))} swap used of ${bytes(m.SwapTotal)}</p><small>Disk-backed swap is slower than physical RAM.</small></section><section class="panel"><h2>Storage & uptime</h2><p>${disk ? bytes(disk.available) + " free of " + bytes(disk.total) : "Disk information unavailable"}</p><p>Host up ${Math.floor(d.server.uptimeSeconds / 86400)} days, ${Math.floor(d.server.uptimeSeconds / 3600) % 24} hours</p><small>1-minute load ${d.server.load.toFixed(2)} · ${d.server.cpuCount} CPU cores</small></section></div><section class="panel"><h2>Server services</h2>${Object.entries(
+        d.services,
+      )
+        .map(
+          ([name, status]) =>
+            `<div class="revision"><strong>${name === "caddy" ? "Website server (Caddy)" : "Site studio admin"}</strong><span class="badge ${status === "active" ? "" : "hidden"}">${esc(status)}</span></div>`,
+        )
+        .join(
+          "",
+        )}<p class="muted">Checked ${esc(new Date(d.checkedAt).toLocaleString())}</p></section>`;
+  } else
+    $("#health-cards").innerHTML =
+      '<p class="error-panel">' + esc(checks[0].reason.message) + "</p>";
+  if (checks[1].status === "fulfilled") {
+    const d = checks[1].value;
+    $("#github-status").innerHTML =
+      `<h2>GitHub build status</h2><p class="muted">${esc(d.note)}</p>${d.runs.map((run) => `<div class="revision"><div><a href="${esc(run.url)}" target="_blank" rel="noopener">${esc(run.name)} ↗</a><p>Commit ${esc(run.commit)} · ${esc(new Date(run.updated).toLocaleString())}</p></div><span class="badge ${run.conclusion === "success" ? "" : "hidden"}">${esc(run.conclusion || run.status)}</span></div>`).join("") || "<p>No workflow runs found.</p>"}`;
+  } else
+    $("#github-status").innerHTML =
+      '<h2>GitHub build status</h2><p class="muted">' +
+      esc(checks[1].reason.message) +
+      "</p>";
 }
 
-$("#mobile-nav").onchange = event => { if(canLeave()){dirty=false;view=event.target.value;render();}else event.target.value=view; };
+$("#mobile-nav").onchange = (event) => {
+  if (canLeave()) {
+    dirty = false;
+    view = event.target.value;
+    render();
+  } else event.target.value = view;
+};

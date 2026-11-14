@@ -16,17 +16,24 @@ const LIVE_ROOT = process.env.SITE_ROOT || path.resolve(__dirname, "..");
 const workspace = require("./workspace")(LIVE_ROOT);
 const SITE_ROOT = workspace.draft;
 const PUBLISH_DIR = process.env.PUBLISH_DIR || "/var/www/mutman.tech";
-const GC_URL = (
-  process.env.GOATCOUNTER_URL || "https://mutman.goatcounter.com"
-).replace(/\/$/, "");
-const GC_TOKEN = process.env.GOATCOUNTER_TOKEN || "";
 const PROJECTS_DIR = path.join(SITE_ROOT, "src", "content", "projects");
 const DATA_DIR = path.join(SITE_ROOT, "src", "data");
 const PUBLIC_DIR = path.join(SITE_ROOT, "public");
 const app = express();
 app.use(express.json({ limit: "4mb" }));
 app.use(express.static(path.join(__dirname, "public")));
-app.use("/fonts", express.static(path.join(LIVE_ROOT,"node_modules","@fontsource","ibm-plex-sans","files")));
+app.use(
+  "/fonts",
+  express.static(
+    path.join(
+      LIVE_ROOT,
+      "node_modules",
+      "@fontsource",
+      "ibm-plex-sans",
+      "files",
+    ),
+  ),
+);
 app.use("/preview", (req, res, next) => {
   const base = process.env.ADMIN_BASE_PATH ?? "/admin";
   const relative = decodeURIComponent(req.path).replace(/^\/+/, "");
@@ -57,7 +64,9 @@ app.use("/_astro", express.static(path.join(SITE_ROOT, "dist", "_astro")));
 app.use((req, res, next) => {
   if (
     ["POST", "PUT", "DELETE"].includes(req.method) &&
-    !["/api/preview", "/api/publish"].includes(req.path)
+    !["/api/preview", "/api/publish", "/api/integrations/goatcounter"].includes(
+      req.path,
+    )
   ) {
     if (buildState.running || publishing)
       return res
@@ -298,7 +307,9 @@ app.get("/api/projects", (req, res) => {
     res.status(e.status || 500).json({ error: String(e.message || e) });
   }
 });
-function invalid(message) { return Object.assign(new Error(message), {status:400}); }
+function invalid(message) {
+  return Object.assign(new Error(message), { status: 400 });
+}
 function saveProject(body, slug) {
   const clean = {
     title: String(body.title || "").trim(),
@@ -485,12 +496,10 @@ app.delete("/api/files/image/:name", async (req, res) => {
       project.media.some((m) => m.src === "/images/" + name),
     );
     if (used)
-      return res
-        .status(409)
-        .json({
-          error:
-            "This image is attached to a project. Remove it from the project first.",
-        });
+      return res.status(409).json({
+        error:
+          "This image is attached to a project. Remove it from the project first.",
+      });
     const p = path.join(PUBLIC_DIR, "images", name);
     if (!fs.existsSync(p)) return res.status(404).json({ error: "Not found" });
     fs.unlinkSync(p);
@@ -499,44 +508,7 @@ app.delete("/api/files/image/:name", async (req, res) => {
     res.status(e.status || 500).json({ error: String(e.message || e) });
   }
 });
-app.get("/api/stats", async (req, res) => {
-  if (!GC_TOKEN) return res.json({ configured: false });
-  const days = Math.max(1, Math.min(Number(req.query.days) || 30, 365));
-  const end = new Date();
-  const start = new Date(Date.now() - days * 86400000);
-  const fmt = (d) => d.toISOString().slice(0, 10);
-  const headers = { Authorization: `Bearer ${GC_TOKEN}` };
-  try {
-    const [tot, hits] = await Promise.all([
-      fetch(
-        `${GC_URL}/api/v0/stats/total?start=${fmt(start)}&end=${fmt(end)}`,
-        { headers },
-      ),
-      fetch(
-        `${GC_URL}/api/v0/stats/hits?start=${fmt(start)}&end=${fmt(end)}&limit=15`,
-        { headers },
-      ),
-    ]);
-    const data = {
-      configured: true,
-      days,
-      total: null,
-      hits: null,
-      error: null,
-    };
-    if (!tot.ok) {
-      data.error = `GoatCounter returned ${tot.status}`;
-      return res.json(data);
-    }
-    data.total = await tot.json();
-    data.hits = hits.ok ? await hits.json() : null;
-    res.json(data);
-  } catch (e) {
-    res
-      .status(500)
-      .json({ configured: true, error: String((e && e.message) || e) });
-  }
-});
+require("./monitoring")(app, { draftRoot: SITE_ROOT, publishDir: PUBLISH_DIR });
 app.post("/api/preview", async (req, res) => {
   if (publishing || buildState.running)
     return res.status(409).json({ error: "Wait for the current build." });
@@ -554,12 +526,10 @@ app.post("/api/publish", async (req, res) => {
   try {
     await scheduleRebuild();
     if (!buildState.last.ok)
-      return res
-        .status(422)
-        .json({
-          error: "Build failed. Live site was not changed.",
-          build: buildState,
-        });
+      return res.status(422).json({
+        error: "Build failed. Live site was not changed.",
+        build: buildState,
+      });
     const result = await run(
       "rsync",
       ["-a", "--delete", path.join(SITE_ROOT, "dist") + "/", PUBLISH_DIR + "/"],
@@ -579,12 +549,10 @@ app.post("/api/publish", async (req, res) => {
         SITE_ROOT,
       );
       if (!sync.ok)
-        return res
-          .status(500)
-          .json({
-            error: "Site published but source sync failed",
-            log: sync.out,
-          });
+        return res.status(500).json({
+          error: "Site published but source sync failed",
+          log: sync.out,
+        });
     }
     res.json({ ok: true, published: new Date().toISOString() });
   } finally {
